@@ -3,7 +3,18 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
-import { Sparkles, Copy, Check, AlertCircle, Loader2, Gift, Volume2, VolumeX, MailCheck, ArrowRight } from "lucide-react";
+import {
+  Sparkles,
+  Copy,
+  Check,
+  AlertCircle,
+  Loader2,
+  Gift,
+  Volume2,
+  VolumeX,
+  MailCheck,
+  ArrowRight,
+} from "lucide-react";
 
 interface RewardData {
   spin_id: string;
@@ -32,7 +43,6 @@ const SEGMENTS = [
 ];
 
 export function SpinWheel() {
-  const [loadingInitial, setLoadingInitial] = useState(true);
   const [isSpinning, setIsSpinning] = useState(false);
   const [unauthorized, setUnauthorized] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -124,6 +134,7 @@ export function SpinWheel() {
     }
   };
 
+  // Background check for existing reward or session (NEVER blocks the wheel from rendering)
   useEffect(() => {
     async function checkExisting() {
       try {
@@ -152,15 +163,14 @@ export function SpinWheel() {
           });
         }
       } catch {
-        // Continue to allow spin attempt
-      } finally {
-        setLoadingInitial(false);
+        // Safe fallback - wheel remains playable
       }
     }
     checkExisting();
   }, []);
 
-  const handleSpin = async () => {
+  // Core spin execution engine
+  const executeSpin = async () => {
     if (isSpinning || reward) return;
 
     setIsSpinning(true);
@@ -184,6 +194,11 @@ export function SpinWheel() {
       if (res.status === 401) {
         setUnauthorized(true);
         setIsSpinning(false);
+        const card = document.getElementById("spin-pass-card");
+        if (card) {
+          card.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        setErrorMessage("Please enter your details below to unlock your guaranteed spin!");
         return;
       }
 
@@ -242,28 +257,21 @@ export function SpinWheel() {
     }
   };
 
-  const copyCode = async () => {
-    if (!reward?.reward_code) return;
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(reward.reward_code);
-      } else {
-        const textarea = document.createElement("textarea");
-        textarea.value = reward.reward_code;
-        textarea.style.position = "fixed";
-        textarea.style.opacity = "0";
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textarea);
+  // Click on the center circular SPIN button
+  const handleCenterSpinClick = () => {
+    if (unauthorized) {
+      const el = document.getElementById("spin-reg-name");
+      if (el) {
+        el.focus();
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
       }
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Safe fallback
+      setErrorMessage("Please fill your name & mobile below to unlock your spin!");
+      return;
     }
+    executeSpin();
   };
 
+  // Quick 3-field inline registration (Directly unlocks & spins)
   const handleQuickRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsRegistering(true);
@@ -306,7 +314,7 @@ export function SpinWheel() {
         return;
       }
 
-      // If returning visitor who has already spun
+      // If returning visitor who has already spun, display previous winning voucher
       if (json.data?.already_spun && json.data?.spin) {
         const s = json.data.spin;
         setReward({
@@ -330,141 +338,36 @@ export function SpinWheel() {
       // Successful new registration (signed cookie set on response)
       setUnauthorized(false);
       setIsRegistering(false);
+
+      // Automatically trigger the spin!
+      executeSpin();
     } catch {
       setRegError("Network error. Please try again.");
       setIsRegistering(false);
     }
   };
 
-  if (loadingInitial) {
-    return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#ccff00]" />
-        <p className="mt-3 font-mono text-xs text-neutral-400 uppercase tracking-wider">
-          {"// VERIFYING ACCESS PASS..."}
-        </p>
-      </div>
-    );
-  }
-
-  if (unauthorized) {
-    return (
-      <div className="mx-auto max-w-md px-4 py-2">
-        <div className="rounded-2xl border-2 border-[#252a31] bg-[#101214] p-6 shadow-cyber transition hover:border-[#ccff00]/40 sm:p-7">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#ccff00]">
-              {"// 1 GUARANTEED LUCKY DRAW"}
-            </span>
-            <span className="rounded-full bg-[#ccff00]/10 border border-[#ccff00]/30 px-2 py-0.5 font-mono text-[10px] font-bold text-[#ccff00]">
-              FREE ENTRY
-            </span>
-          </div>
-
-          <h2 className="mt-2 text-2xl font-black uppercase tracking-tight text-white">
-            REGISTER TO <span className="text-[#ccff00]">UNLOCK WHEEL</span>
-          </h2>
-          <p className="mt-1 font-mono text-xs text-neutral-400 leading-relaxed">
-            Enter your details below to claim your booth pass and immediately unlock your guaranteed lucky draw turn.
-          </p>
-
-          <form onSubmit={handleQuickRegister} className="mt-5 space-y-3.5 text-left font-mono">
-            {regError && (
-              <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
-                <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
-                <span>{regError}</span>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-300">
-                Full Name *
-              </label>
-              <input
-                type="text"
-                required
-                value={regName}
-                onChange={(e) => setRegName(e.target.value)}
-                placeholder="e.g. Rahul Sharma"
-                className="mt-1 h-12 w-full rounded-xl border border-[#252a31] bg-[#0c0d0e] px-3.5 text-sm font-semibold text-white placeholder-neutral-600 focus:border-[#ccff00] focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-300">
-                WhatsApp / Mobile Number *
-              </label>
-              <div className="mt-1 flex">
-                <span className="inline-flex h-12 items-center rounded-l-xl border border-r-0 border-[#252a31] bg-[#141619] px-3 text-xs font-bold text-neutral-400">
-                  +91
-                </span>
-                <input
-                  type="tel"
-                  required
-                  maxLength={10}
-                  value={regMobile}
-                  onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  placeholder="9876543210"
-                  className="h-12 flex-1 rounded-r-xl border border-[#252a31] bg-[#0c0d0e] px-3.5 text-sm font-semibold tracking-wider text-white placeholder-neutral-600 focus:border-[#ccff00] focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-300">
-                Email Address *
-              </label>
-              <input
-                type="email"
-                required
-                value={regEmail}
-                onChange={(e) => setRegEmail(e.target.value)}
-                placeholder="rahul@company.com"
-                className="mt-1 h-12 w-full rounded-xl border border-[#252a31] bg-[#0c0d0e] px-3.5 text-sm font-semibold text-white placeholder-neutral-600 focus:border-[#ccff00] focus:outline-none"
-              />
-            </div>
-
-            <div className="pt-1">
-              <label className="flex items-start gap-2.5 cursor-pointer text-[10px] text-neutral-400 leading-snug">
-                <input
-                  type="checkbox"
-                  checked={regConsent}
-                  onChange={(e) => setRegConsent(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-[#252a31] bg-[#0c0d0e] accent-[#ccff00]"
-                />
-                <span>
-                  I agree to receive my prize voucher code via email/WhatsApp under the DPDP Act 2023.
-                </span>
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isRegistering}
-              className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition disabled:opacity-50"
-            >
-              {isRegistering ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin text-black" />
-                  <span>GENERATING PASS...</span>
-                </>
-              ) : (
-                <>
-                  <span>UNLOCK LUCKY DRAW & SPIN NOW</span>
-                  <ArrowRight className="h-4 w-4 stroke-[3]" />
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="mt-4 border-t border-[#252a31] pt-3 text-center">
-            <Link href="/" className="font-mono text-xs text-neutral-400 hover:text-[#ccff00] transition">
-              ← Return to Pathixo Portal
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const copyCode = async () => {
+    if (!reward?.reward_code) return;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(reward.reward_code);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = reward.reward_code;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Safe fallback
+    }
+  };
 
   return (
     <div className="mx-auto max-w-md px-4 py-2 sm:px-6">
@@ -497,7 +400,9 @@ export function SpinWheel() {
             SPIN & WIN <span className="text-[#ccff00]">REWARDS</span>
           </h1>
           <p className="mt-1.5 font-mono text-xs text-neutral-400">
-            Tap the center button to spin. Cryptographically verified on our server.
+            {unauthorized
+              ? "Enter your details below to unlock your guaranteed turn."
+              : "Tap the center SPIN button to claim your trade show voucher."}
           </p>
 
           {errorMessage && (
@@ -507,7 +412,7 @@ export function SpinWheel() {
             </div>
           )}
 
-          {/* Cyber Lime & Stealth Carbon Wheel Container */}
+          {/* Cyber Lime & Stealth Carbon Wheel Container - ALWAYS VISIBLE */}
           <div className="relative mx-auto mt-7 flex h-[310px] w-[310px] items-center justify-center select-none">
             {/* Top Cyber Lime Pointer */}
             <div className="absolute -top-3.5 z-20 flex flex-col items-center">
@@ -518,7 +423,9 @@ export function SpinWheel() {
             <div
               style={{
                 transform: `rotate(${rotation}deg)`,
-                transition: isSpinning ? "transform 4.5s cubic-bezier(0.12, 0.95, 0.22, 1.0)" : "none",
+                transition: isSpinning
+                  ? "transform 4.5s cubic-bezier(0.12, 0.95, 0.22, 1.0)"
+                  : "none",
                 willChange: "transform",
               }}
               className="h-[300px] w-[300px] rounded-full border-4 border-[#ccff00]/60 shadow-[0_0_30px_rgba(204,255,0,0.12)] relative overflow-hidden bg-[#101214]"
@@ -559,9 +466,9 @@ export function SpinWheel() {
 
             {/* Center Tactile Cyber Lime Spin Button */}
             <button
-              onClick={handleSpin}
-              disabled={isSpinning}
-              className="absolute z-30 flex h-20 w-20 flex-col items-center justify-center rounded-full border-2 border-black bg-[#ccff00] text-black shadow-cyber transition active:scale-95 hover:bg-[#d9ff33] disabled:opacity-80"
+              onClick={handleCenterSpinClick}
+              disabled={isSpinning || isRegistering}
+              className="absolute z-30 flex h-20 w-20 flex-col items-center justify-center rounded-full border-2 border-black bg-[#ccff00] text-black shadow-cyber transition active:scale-95 hover:bg-[#d9ff33] disabled:opacity-80 cursor-pointer"
             >
               <Sparkles className="h-4 w-4 text-black stroke-[2.5]" />
               <span className="font-mono text-xs font-black uppercase tracking-wider">
@@ -569,6 +476,120 @@ export function SpinWheel() {
               </span>
             </button>
           </div>
+
+          {/* Quick Registration Form Card - displayed right below the wheel if user needs pass */}
+          {unauthorized && !isSpinning && (
+            <div
+              id="spin-pass-card"
+              className="mt-8 rounded-2xl border-2 border-[#252a31] bg-[#101214] p-5 text-left shadow-cyber transition hover:border-[#ccff00]/40 sm:p-6"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#ccff00]">
+                  {"// 1 GUARANTEED LUCKY DRAW"}
+                </span>
+                <span className="rounded-full bg-[#ccff00]/10 border border-[#ccff00]/30 px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#ccff00]">
+                  FREE ENTRY
+                </span>
+              </div>
+
+              <h2 className="mt-2 text-xl font-black uppercase tracking-tight text-white">
+                CLAIM PASS TO <span className="text-[#ccff00]">SPIN WHEEL</span>
+              </h2>
+              <p className="mt-1 font-mono text-xs text-neutral-400">
+                Enter your details to generate your digital stall pass and immediately spin.
+              </p>
+
+              <form onSubmit={handleQuickRegister} className="mt-4 space-y-3 font-mono">
+                {regError && (
+                  <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
+                    <span>{regError}</span>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-300">
+                    Full Name *
+                  </label>
+                  <input
+                    id="spin-reg-name"
+                    type="text"
+                    required
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    placeholder="e.g. Rahul Sharma"
+                    className="mt-1 h-11 w-full rounded-xl border border-[#252a31] bg-[#0c0d0e] px-3.5 text-sm font-semibold text-white placeholder-neutral-600 focus:border-[#ccff00] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-300">
+                    WhatsApp / Mobile Number *
+                  </label>
+                  <div className="mt-1 flex">
+                    <span className="inline-flex h-11 items-center rounded-l-xl border border-r-0 border-[#252a31] bg-[#141619] px-3 text-xs font-bold text-neutral-400">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      maxLength={10}
+                      value={regMobile}
+                      onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      placeholder="9876543210"
+                      className="h-11 flex-1 rounded-r-xl border border-[#252a31] bg-[#0c0d0e] px-3.5 text-sm font-semibold tracking-wider text-white placeholder-neutral-600 focus:border-[#ccff00] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-300">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    placeholder="rahul@company.com"
+                    className="mt-1 h-11 w-full rounded-xl border border-[#252a31] bg-[#0c0d0e] px-3.5 text-sm font-semibold text-white placeholder-neutral-600 focus:border-[#ccff00] focus:outline-none"
+                  />
+                </div>
+
+                <div className="pt-1">
+                  <label className="flex items-start gap-2.5 cursor-pointer text-[10px] text-neutral-400 leading-snug">
+                    <input
+                      type="checkbox"
+                      checked={regConsent}
+                      onChange={(e) => setRegConsent(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-[#252a31] bg-[#0c0d0e] accent-[#ccff00]"
+                    />
+                    <span>
+                      I agree to receive my prize voucher code via email under the DPDP Act 2023.
+                    </span>
+                  </label>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isRegistering}
+                  className="mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition disabled:opacity-50 cursor-pointer"
+                >
+                  {isRegistering ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin text-black" />
+                      <span>UNLOCKING & SPINNING...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>UNLOCK & SPIN WHEEL NOW</span>
+                      <ArrowRight className="h-4 w-4 stroke-[3]" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       ) : (
         /* Cyber Voucher Reward Card */
@@ -600,7 +621,7 @@ export function SpinWheel() {
               </span>
               <button
                 onClick={copyCode}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-[#16191d] text-neutral-300 hover:border-[#ccff00] hover:text-[#ccff00] active:scale-95 transition"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-[#16191d] text-neutral-300 hover:border-[#ccff00] hover:text-[#ccff00] active:scale-95 transition cursor-pointer"
                 title="Copy code"
               >
                 {copied ? <Check className="h-4 w-4 text-[#ccff00]" /> : <Copy className="h-4 w-4" />}
