@@ -32,7 +32,9 @@ export function Footer() {
             <ul className="mt-3 space-y-2 text-xs">
               <li>
                 <a
-                  href={`mailto:${siteConfig.company.email}`}
+                  href={siteConfig.company.gmailComposeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center gap-2 transition hover:text-white"
                 >
                   <Mail className="h-3.5 w-3.5 text-brand-400" />

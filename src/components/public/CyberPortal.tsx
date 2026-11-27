@@ -341,12 +341,14 @@ export function CyberPortal() {
                 <ArrowUpRight className="h-4 w-4 shrink-0 text-neutral-400" />
               </motion.a>
 
-              {/* Direct Email Link */}
+              {/* Direct Email Link (Redirect to Gmail) */}
               <motion.a
                 whileTap={{ scale: 0.98 }}
                 whileHover={{ scale: 1.01 }}
-                href={`mailto:${siteConfig.company.email}?subject=Inquiry%20from%20Meerut%20Trade%20Show%202026&body=Hello%20Pathixo%20Team,%0A%0AI%20connected%20with%20you%20at%20the%20Meerut%20Trade%20Show%202026%20and%20would%20like%20to%20learn%20more%20about%20your%20services.`}
-                aria-label="Send direct inquiry email to Pathixo founder"
+                href={siteConfig.company.gmailComposeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Send direct inquiry email to Pathixo founder via Gmail"
                 className="flex items-center justify-between rounded-2xl sm:rounded-full border-2 border-neutral-700/80 bg-[#141619] px-4 py-3 text-white transition hover:border-[#ccff00] hover:bg-[#181b20]"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -394,10 +396,16 @@ export function CyberPortal() {
               <MapPin className="h-3.5 w-3.5 text-[#ccff00]" />
               <span>Offices: Greater Noida • New Delhi • Howrah</span>
             </span>
-            <span className="flex items-center gap-1.5">
+            <a
+              href={siteConfig.company.gmailComposeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Email founder at Pathixo via Gmail"
+              className="flex items-center gap-1.5 hover:text-[#ccff00] transition"
+            >
               <Mail className="h-3.5 w-3.5 text-[#ccff00]" />
               <span>{siteConfig.company.email}</span>
-            </span>
+            </a>
             <span className="flex items-center gap-1.5">
               <Phone className="h-3.5 w-3.5 text-[#ccff00]" />
               <span>{siteConfig.company.displayPhone}</span>

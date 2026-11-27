@@ -12,6 +12,8 @@ export const siteConfig = {
       "Pathixo is an AI-first technology and product engineering company that builds intelligent proprietary digital products and customized technology solutions for visionary businesses.",
     website: "https://pathixo.com/",
     email: "founder@pathixo.com",
+    gmailComposeUrl:
+      "https://mail.google.com/mail/?view=cm&fs=1&to=founder@pathixo.com&su=Inquiry%20from%20Meerut%20Trade%20Show%202026&body=Hello%20Pathixo%20Team,%0A%0AI%20connected%20with%20you%20at%20the%20Meerut%20Trade%20Show%202026%20and%20would%20like%20to%20learn%20more%20about%20your%20services.",
     phone: "+91 9711015569",
     displayPhone: "+91 97110 15569",
     linkedIn: "https://www.linkedin.com/company/pathixopvtltd/",
