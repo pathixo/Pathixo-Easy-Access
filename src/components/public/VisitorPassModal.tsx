@@ -138,7 +138,7 @@ export function VisitorPassModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           {/* Backdrop with ambient blur */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -148,53 +148,53 @@ export function VisitorPassModal({
             className="fixed inset-0 bg-black/80 backdrop-blur-sm"
           />
 
-          {/* Modal / Cyber Sheet */}
+          {/* Centered Modal Window */}
           <motion.div
-            initial={{ opacity: 0, y: 60, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 60, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-lg rounded-t-3xl sm:rounded-2xl border-2 border-[#ccff00] bg-[#0c0d0e] p-6 text-white shadow-[0px_0px_30px_rgba(204,255,0,0.15)] z-10 max-h-[92vh] overflow-y-auto"
+            className="relative w-full max-w-md sm:max-w-lg rounded-3xl border-2 border-[#ccff00] bg-[#0c0d0e] p-4 sm:p-6 text-white shadow-[0px_0px_35px_rgba(204,255,0,0.25)] z-10 max-h-[92vh] overflow-y-auto my-auto"
           >
             {/* Header Badge */}
-            <div className="flex items-center justify-between pb-3 border-b border-[#252a31]">
+            <div className="flex items-center justify-between pb-2 sm:pb-3 border-b border-[#252a31]">
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-[#ccff00] animate-pulse" />
-                <span className="font-mono text-[11px] font-semibold tracking-wider text-[#ccff00] uppercase">
+                <span className="font-mono text-[10px] sm:text-[11px] font-semibold tracking-wider text-[#ccff00] uppercase">
                   {"// MEERUT TRADE SHOW • DIGITAL VISITOR PASS"}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={handleResetModal}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900 text-neutral-400 hover:text-white hover:border-[#ccff00] transition"
+                className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900 text-neutral-400 hover:text-white hover:border-[#ccff00] transition"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
             </div>
 
             {!isSuccess ? (
-              <div className="mt-4">
-                <div className="mb-5">
-                  <h3 className="text-xl font-black uppercase tracking-tight text-white sm:text-2xl">
+              <div className="mt-2.5 sm:mt-3.5">
+                <div className="mb-3 sm:mb-4 text-center sm:text-left">
+                  <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight text-white">
                     UNLOCK {dest.name}
                   </h3>
-                  <p className="mt-1 font-mono text-xs text-neutral-400">
+                  <p className="mt-0.5 font-mono text-[11px] sm:text-xs text-neutral-400 leading-snug">
                     Quick 15-second pass registration for live booth visitors at Meerut Trade Show.
                   </p>
                 </div>
 
                 {errorMessage && (
-                  <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-red-500/40 bg-red-950/40 p-3 text-xs text-red-300">
+                  <div className="mb-3 flex items-start gap-2 rounded-xl border border-red-500/40 bg-red-950/40 p-2.5 text-xs text-red-300">
                     <AlertCircle className="h-4 w-4 shrink-0 text-red-400 mt-0.5" />
                     <span>{errorMessage}</span>
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5 sm:space-y-3">
                   {/* Full Name */}
                   <div>
-                    <label className="block font-mono text-xs font-semibold text-neutral-300 uppercase">
+                    <label className="block font-mono text-[11px] sm:text-xs font-semibold text-neutral-300 uppercase">
                       Full Name <span className="text-[#ccff00]">*</span>
                     </label>
                     <input
@@ -204,10 +204,10 @@ export function VisitorPassModal({
                         required: "Name is required",
                         minLength: { value: 2, message: "Min 2 characters" },
                       })}
-                      className="mt-1 h-12 w-full rounded-xl border border-[#252a31] bg-[#141619] px-4 font-sans text-sm text-white placeholder-neutral-500 focus:border-[#ccff00] focus:outline-none focus:ring-1 focus:ring-[#ccff00]"
+                      className="mt-0.5 h-10 sm:h-11 w-full rounded-xl border border-[#252a31] bg-[#141619] px-3.5 font-sans text-xs sm:text-sm text-white placeholder-neutral-500 focus:border-[#ccff00] focus:outline-none focus:ring-1 focus:ring-[#ccff00]"
                     />
                     {errors.full_name && (
-                      <p className="mt-1 font-mono text-[11px] text-red-400">
+                      <p className="mt-0.5 font-mono text-[10px] sm:text-[11px] text-red-400">
                         {errors.full_name.message}
                       </p>
                     )}
@@ -215,10 +215,10 @@ export function VisitorPassModal({
 
                   {/* Mobile Number */}
                   <div>
-                    <label className="block font-mono text-xs font-semibold text-neutral-300 uppercase">
+                    <label className="block font-mono text-[11px] sm:text-xs font-semibold text-neutral-300 uppercase">
                       Phone Number (10 digits) <span className="text-[#ccff00]">*</span>
                     </label>
-                    <div className="relative mt-1 flex items-center">
+                    <div className="relative mt-0.5 flex items-center">
                       <span className="absolute left-3.5 font-mono text-xs text-neutral-400 font-semibold">
                         +91
                       </span>
@@ -233,11 +233,11 @@ export function VisitorPassModal({
                             message: "Enter valid 10-digit Indian mobile",
                           },
                         })}
-                        className="h-12 w-full rounded-xl border border-[#252a31] bg-[#141619] pl-12 pr-4 font-mono text-sm text-white placeholder-neutral-500 focus:border-[#ccff00] focus:outline-none focus:ring-1 focus:ring-[#ccff00]"
+                        className="h-10 sm:h-11 w-full rounded-xl border border-[#252a31] bg-[#141619] pl-12 pr-3.5 font-mono text-xs sm:text-sm text-white placeholder-neutral-500 focus:border-[#ccff00] focus:outline-none focus:ring-1 focus:ring-[#ccff00]"
                       />
                     </div>
                     {errors.mobile && (
-                      <p className="mt-1 font-mono text-[11px] text-red-400">
+                      <p className="mt-0.5 font-mono text-[10px] sm:text-[11px] text-red-400">
                         {errors.mobile.message}
                       </p>
                     )}
@@ -245,7 +245,7 @@ export function VisitorPassModal({
 
                   {/* Email */}
                   <div>
-                    <label className="block font-mono text-xs font-semibold text-neutral-300 uppercase">
+                    <label className="block font-mono text-[11px] sm:text-xs font-semibold text-neutral-300 uppercase">
                       Email Address <span className="text-[#ccff00]">*</span>
                     </label>
                     <input
@@ -258,10 +258,10 @@ export function VisitorPassModal({
                           message: "Enter valid email address",
                         },
                       })}
-                      className="mt-1 h-12 w-full rounded-xl border border-[#252a31] bg-[#141619] px-4 font-sans text-sm text-white placeholder-neutral-500 focus:border-[#ccff00] focus:outline-none focus:ring-1 focus:ring-[#ccff00]"
+                      className="mt-0.5 h-10 sm:h-11 w-full rounded-xl border border-[#252a31] bg-[#141619] px-3.5 font-sans text-xs sm:text-sm text-white placeholder-neutral-500 focus:border-[#ccff00] focus:outline-none focus:ring-1 focus:ring-[#ccff00]"
                     />
                     {errors.email && (
-                      <p className="mt-1 font-mono text-[11px] text-red-400">
+                      <p className="mt-0.5 font-mono text-[10px] sm:text-[11px] text-red-400">
                         {errors.email.message}
                       </p>
                     )}
@@ -269,12 +269,12 @@ export function VisitorPassModal({
 
                   {/* Primary Area of Interest */}
                   <div>
-                    <label className="block font-mono text-xs font-semibold text-neutral-300 uppercase">
+                    <label className="block font-mono text-[11px] sm:text-xs font-semibold text-neutral-300 uppercase">
                       Primary Area of Interest
                     </label>
                     <select
                       {...register("interested_product")}
-                      className="mt-1 h-12 w-full rounded-xl border border-[#252a31] bg-[#141619] px-3 font-mono text-xs text-white focus:border-[#ccff00] focus:outline-none"
+                      className="mt-0.5 h-10 sm:h-11 w-full rounded-xl border border-[#252a31] bg-[#141619] px-3 font-mono text-[11px] sm:text-xs text-white focus:border-[#ccff00] focus:outline-none"
                     >
                       <option value="all">General Exploration / All Platforms</option>
                       <option value="vakxo">Vakxo — Autonomous Voice Dev Agent</option>
@@ -284,13 +284,13 @@ export function VisitorPassModal({
                   </div>
 
                   {/* DPDP Consent */}
-                  <label className="flex items-start gap-2.5 cursor-pointer pt-1">
+                  <label className="flex items-start gap-2 cursor-pointer pt-0.5">
                     <input
                       type="checkbox"
                       {...register("privacy_consent", { required: "Please accept the Privacy Policy to continue." })}
-                      className="mt-0.5 h-4 w-4 rounded border-neutral-700 bg-neutral-900 text-[#ccff00] accent-[#ccff00] focus:ring-0"
+                      className="mt-0.5 h-3.5 w-3.5 rounded border-neutral-700 bg-neutral-900 text-[#ccff00] accent-[#ccff00] focus:ring-0"
                     />
-                    <span className="font-mono text-[11px] text-neutral-400 leading-tight">
+                    <span className="font-mono text-[10px] text-neutral-400 leading-tight">
                       I agree to receive event updates from Pathixo pursuant to DPDP Act 2023. View our{" "}
                       <Link
                         href="/privacy"
@@ -315,15 +315,15 @@ export function VisitorPassModal({
                     className="pt-1"
                   />
 
-                  {/* Big Cyber Submit Button */}
+                  {/* Submit Button */}
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="relative flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] font-mono text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition disabled:opacity-50"
+                    className="relative flex h-11 sm:h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] font-mono text-xs sm:text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition disabled:opacity-50"
                   >
                     {isSubmitting ? (
                       <>
-                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                         <span>ISSUING PASS...</span>
                       </>
                     ) : (
@@ -385,6 +385,23 @@ export function VisitorPassModal({
                     <Sparkles className="h-4 w-4" />
                     <span>PLAY STALL LUCKY DRAW (SPIN & WIN)</span>
                   </Link>
+
+                  {/* Switch / New Attendee Option */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      try {
+                        localStorage.removeItem("px_visitor_registered");
+                        localStorage.removeItem("px_visitor_name");
+                      } catch {}
+                      setIsSuccess(false);
+                      setRegisteredName("");
+                      reset();
+                    }}
+                    className="block w-full text-center text-xs text-neutral-400 hover:text-white underline underline-offset-2 pt-1 transition"
+                  >
+                    Register new / different visitor
+                  </button>
                 </div>
               </div>
             )}
