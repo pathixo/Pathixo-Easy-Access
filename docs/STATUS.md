@@ -5,8 +5,8 @@
 | 0 Accounts/assets | done | Supabase dev project connected; keys in `.env.local`; database connectivity verified; remote GitHub repository linked. |
 | 1 Scaffold + DB | done | Next.js 14 scaffold created; SQL migrations, RLS enabled on 100% of tables, `spin_wheel()` cryptographic atomic function, seed catalog data applied and verified. |
 | 2 Backend APIs | done | All 6 REST endpoints built (`/api/register`, `/api/spin`, `/api/spin/result`, `/api/inquiry`, `/api/products`, `/api/events`); strict Zod input validation, Turnstile bot verification, signed `jose` session cookies, Upstash sliding window rate limiting; 17/17 automated API tests passing. |
-| 3 Public UI | done | Dual-responsive Cyber-Gamified Portal (fluid on 360px–430px mobile, 2-column command center on desktop max-w-6xl); electric lime (#ccff00) theme matching Vakxo; Meerut Trade Show 2026 live HUD; upfront Digital Visitor Pass gate auto-opened on initial arrival with prompt timer invalidation on user interaction; safe `/?register=true` recovery isolated from storage errors; session recovery on matching duplicate registration; 1-tap direct external platform access post-registration; circular draggable floating Spin & Win chatbot widget (`FloatingSpinBot`, golden/amber `#fbbf24`, no tooltip clutter); verified ESLint, TypeScript, and clean build passing. |
-| 4 Admin | done | Secure admin panel built via Supabase Auth + `@supabase/ssr`; role hierarchy (`super_admin`, `admin`, `viewer`); real-time dashboard stats, paginated leads table, business inquiries pipeline, stall voucher quick-redemption tool, streaming CSV exports with formula injection neutralization, audit logs, CLI admin provisioning tool; 10/10 automated tests passing. |
+| 3 Public UI | done | Re-architected into mobile-first Cyber-Gamified Trade Show Portal; electric lime (#ccff00) & stealth carbon theme matching Vakxo branding; Meerut Trade Show 2026 live HUD; frictionless inline registration directly on `/spin` to eliminate redirect loops; interactive Digital Visitor Pass modal on website cards; Web Audio mechanical ticking SFX + victory chime; confetti animation; guaranteed discount vouchers; duplicate registration recovery with instant voucher retrieval. |
+| 4 Admin | done | Overhauled to match the Cyber Lime & Stealth Carbon HUD theme; role hierarchy (`super_admin`, `admin`, `viewer`); neutral System Administrator credentials; live editable Prize Pool & Odds manager (`/admin/lucky-draw`) with live probability weight recalculation; stall voucher quick-redemption tool; audit logs & leads table with `email_status` and `fulfillment_status`; streaming CSV export with sanitization. |
 | 5 Security + tests | done | Production security headers (strict CSP, HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy); rate limit burst tests passing (20/20); security boundaries passing (6/6: direct anon key RLS block, mass assignment rejected, IDOR token verified); concurrency test scripts in `/tests`. |
 | 6 Deploy + QR | done | High-res vector SVG & 2000x2000px 300-DPI PNG stall QR codes generated with UTM tracking; dynamic `robots.txt` & `sitemap.xml`; deployment guide written in `docs/DEPLOYMENT.md`; verified clean production build across 16 routes. |
 | 7 Docs + runbook | done | Root `README.md`, `docs/RUNBOOK.md` (event-day checklist, live monitoring, voucher redemption workflow, paper fallback, inventory pause/adjust, EOD export, DPDP compliance), `docs/ARCHITECTURE.md` (Mermaid diagrams & failure models), `docs/KNOWN-LIMITATIONS.md` completed and cross-verified. |
@@ -31,5 +31,10 @@
 
 ---
 
-## ⚠️ Known Issues
-None. All components, APIs, security boundaries, and documentation are verified and production-ready.
+## ⚠️ Known Issues / Open Items
+- **#5 (High, security)**: Hardcoded super-admin credentials and default `SESSION_SECRET` fallback remain in code until product auth decision is finalized. Do not treat current built-in creds as production-safe.
+- **#6 (High, frontend)**: Fixed in working tree pending commit - VisitorPassModal Turnstile reset on retry.
+- **#7 (Medium, backend/admin)**: Fixed in working tree pending commit - redeem endpoint now sets `fulfillment_status` and uses atomic redemption guard.
+- **#8 (Medium, backend)**: Fixed in working tree pending commit - dev-no-supabase guards added for `/api/events` and `/api/inquiry`.
+- **#9 (Medium, security/admin)**: Fixed in working tree pending commit - rewards page/API restricted to `super_admin`.
+- Real Supabase + real Turnstile + email delivery still require production env configuration and verification.

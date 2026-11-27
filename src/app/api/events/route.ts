@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
 import { eventSchema } from "@/lib/validation";
 import { eventsRateLimiter, getClientIp } from "@/lib/security/rate-limit";
 import { apiError, apiSuccess } from "@/lib/security/errors";
@@ -32,6 +32,14 @@ export async function POST(req: NextRequest) {
     const { event_type, product_slug, metadata } = parseResult.data;
 
     // 3. Store anonymous telemetry
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      return apiSuccess({ recorded: true, dev_mode: true });
+    }
+
+    if (!isSupabaseConfigured()) {
+      return apiError("SERVICE_UNAVAILABLE", "Telemetry service is not configured.", 503);
+    }
+
     const supabase = getAdminClient();
 
     // Fire-and-forget DB insertion

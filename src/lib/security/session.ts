@@ -1,6 +1,6 @@
 import "server-only";
 import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export const VISITOR_SESSION_COOKIE = "px_visitor_session";
 const SESSION_EXPIRY = "12h";
@@ -56,6 +56,37 @@ export async function getVisitorSession(): Promise<VisitorPayload | null> {
 }
 
 /**
+ * A production build served over plain HTTP on localhost/LAN must not set
+ * `Secure`, or the browser silently drops the cookie and the visitor can never
+ * spin. Real deployments behind HTTPS keep `Secure` enabled.
+ */
+function shouldUseSecureCookie(): boolean {
+  try {
+    const headerStore = headers();
+    const host = headerStore.get("host")?.toLowerCase() ?? "";
+    const isLocalHost =
+      host.startsWith("localhost") ||
+      host.startsWith("127.0.0.1") ||
+      host.startsWith("[::1]") ||
+      host.startsWith("192.168.") ||
+      host.startsWith("10.") ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(host);
+
+    if (isLocalHost) return false;
+
+    const forwardedProto = headerStore.get("x-forwarded-proto");
+    if (forwardedProto) {
+      return forwardedProto.split(",")[0]?.trim() === "https";
+    }
+  } catch {
+    // headers() is unavailable outside a request scope; fall back to env.
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  return siteUrl.startsWith("https://");
+}
+
+/**
  * Sets the signed HttpOnly visitor cookie on the response
  */
 export async function setVisitorSessionCookie(visitorId: string): Promise<void> {
@@ -64,7 +95,7 @@ export async function setVisitorSessionCookie(visitorId: string): Promise<void> 
 
   cookieStore.set(VISITOR_SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureCookie(),
     sameSite: "lax",
     path: "/",
     maxAge: 12 * 60 * 60, // 12 hours

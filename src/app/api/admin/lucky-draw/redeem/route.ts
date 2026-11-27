@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireAdmin, logAuditEvent } from "@/lib/admin/auth";
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { getDevStore } from "@/lib/dev-store";
 import { apiError, apiSuccess } from "@/lib/security/errors";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,35 @@ export async function POST(req: NextRequest) {
     }
 
     const cleanCode = reward_code.trim().toUpperCase();
+
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      const store = getDevStore();
+      const spin = store.spins.find((s) => s.reward_code === cleanCode);
+      if (!spin) {
+        return apiError("CODE_NOT_FOUND", "Voucher code not found in system.", 404);
+      }
+      if (spin.redemption_status === "redeemed") {
+        return apiError(
+          "ALREADY_REDEEMED",
+          `This voucher was already marked redeemed on ${spin.redeemed_at}`,
+          400
+        );
+      }
+      const now = new Date().toISOString();
+      spin.redemption_status = "redeemed";
+      spin.fulfillment_status = "redeemed_at_booth";
+      spin.redeemed_at = now;
+      const visitor = store.visitors.find((v) => v.id === spin.visitor_id);
+      const reward = store.rewards.find((r) => r.id === spin.reward_id);
+      return apiSuccess({
+        redeemed: true,
+        redeemed_at: now,
+        spin,
+        visitor: visitor || { full_name: spin.user_name, email: spin.user_email, mobile: spin.user_phone },
+        reward: reward || { name: spin.prize_label },
+      });
+    }
+
     const serviceClient = getAdminClient();
 
     // 1. Fetch spin record with reward and visitor info
@@ -47,21 +77,42 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Mark as redeemed
+    // 3. Mark as redeemed atomically
     const now = new Date().toISOString();
     const { data: updated, error: updateErr } = await serviceClient
       .from("spins")
       .update({
         redemption_status: "redeemed",
+        fulfillment_status: "redeemed_at_booth",
         redeemed_at: now,
         redeemed_by: admin.id,
       })
       .eq("id", spinRecord.id)
+      .eq("redemption_status", "not_redeemed")
       .select()
-      .single();
+      .maybeSingle();
 
     if (updateErr) {
       return apiError("DATABASE_ERROR", "Failed to update redemption status.", 500);
+    }
+
+    if (!updated) {
+      const { data: latest } = await serviceClient
+        .from("spins")
+        .select("redemption_status, redeemed_at")
+        .eq("id", spinRecord.id)
+        .maybeSingle();
+
+      if (latest?.redemption_status === "redeemed") {
+        return apiError(
+          "ALREADY_REDEEMED",
+          `This voucher was already marked redeemed on ${latest.redeemed_at}`,
+          400,
+          { spinRecord }
+        );
+      }
+
+      return apiError("REDEEM_CONFLICT", "Voucher could not be redeemed. Please retry.", 409);
     }
 
     // 4. Log audit event

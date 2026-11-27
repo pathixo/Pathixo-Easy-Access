@@ -5,17 +5,18 @@ import { useForm } from "react-hook-form";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUtm } from "@/lib/hooks/useUtm";
-import { X, Sparkles, CheckCircle2, AlertCircle, Loader2, ArrowRight, ShieldCheck } from "lucide-react";
+import { X, Sparkles, CheckCircle2, AlertCircle, Loader2, ExternalLink, ArrowRight } from "lucide-react";
+import { TurnstileWidget } from "./TurnstileWidget";
 
 export interface VisitorPassModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onRegisterSuccess?: (name: string) => void;
-  targetDestination?: {
+  targetDestination: {
     name: string;
     url: string;
     category?: string;
   };
+  onRegisterSuccess?: (name: string) => void;
 }
 
 interface FormInputs {
@@ -29,20 +30,20 @@ interface FormInputs {
 export function VisitorPassModal({
   isOpen,
   onClose,
-  onRegisterSuccess,
   targetDestination,
+  onRegisterSuccess,
 }: VisitorPassModalProps) {
   const utm = useUtm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [registeredName, setRegisteredName] = useState("");
+  const [existingVoucherCode, setExistingVoucherCode] = useState<string | null>(null);
+  const [existingPrizeName, setExistingPrizeName] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const defaultProduct = targetDestination?.name?.toLowerCase().includes("vakxo")
-    ? "vakxo"
-    : targetDestination?.name?.toLowerCase().includes("kroc")
-    ? "kroc-pdf"
-    : "all";
+  const [turnstileToken, setTurnstileToken] = useState<string>(
+    process.env.NODE_ENV !== "production" ? "1x00000000000000000000AA" : ""
+  );
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   const {
     register,
@@ -51,19 +52,29 @@ export function VisitorPassModal({
     formState: { errors },
   } = useForm<FormInputs>({
     defaultValues: {
-      privacy_consent: true,
-      interested_product: defaultProduct,
+      privacy_consent: false,
+      interested_product: targetDestination.name.toLowerCase().includes("vakxo")
+        ? "vakxo"
+        : targetDestination.name.toLowerCase().includes("kroc")
+          ? "kroc-pdf"
+          : "all",
     },
   });
 
   const onSubmit = async (values: FormInputs) => {
+    const token = turnstileToken || (process.env.NODE_ENV !== "production" ? "1x00000000000000000000AA" : "");
+    if (!token) {
+      setErrorMessage("Please complete the security challenge before proceeding.");
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMessage(null);
 
     try {
       const payload = {
         ...values,
-        turnstile_token: "1x00000000000000000000AA", // Standard local/expo fallback token
+        turnstile_token: token,
         utm_source: utm.utm_source || "meerut_trade_show",
         utm_medium: utm.utm_medium || "qr_kiosk",
         utm_campaign: utm.utm_campaign || "expo_2026",
@@ -80,59 +91,38 @@ export function VisitorPassModal({
       const data = await res.json();
 
       if (!res.ok || !data.ok) {
-        if (res.status === 409 || data?.error?.code === "DUPLICATE_REGISTRATION") {
-          // Check if an existing valid session cookie is active
-          try {
-            const checkSession = await fetch("/api/spin/result");
-            if (checkSession.status !== 401) {
-              // Valid session cookie is present, preserve success behavior
-              const name = values.full_name || "Valued Visitor";
-              setRegisteredName(name);
-              setIsSuccess(true);
-              try {
-                localStorage.setItem("px_visitor_registered", "true");
-                localStorage.setItem("px_visitor_name", name);
-              } catch {}
-              onRegisterSuccess?.(name);
-              return;
-            }
-          } catch {}
-
-          setErrorMessage(
-            data?.error?.message ||
-              "This phone number or email is already registered. Please visit our stall team for lucky draw assistance."
-          );
-          return;
-        }
-
         setErrorMessage(data?.error?.message || "Registration failed. Please check your details.");
+        setTurnstileToken("");
+        setTurnstileResetKey((k) => k + 1);
         return;
       }
 
-      const name = values.full_name;
-      setRegisteredName(name);
+      if (data.data?.already_spun && data.data?.spin) {
+        setExistingVoucherCode(data.data.spin.reward_code);
+        setExistingPrizeName(data.data.spin.reward_name);
+      }
+
+      const resolvedName = data.data?.full_name || values.full_name;
+      setRegisteredName(resolvedName);
       setIsSuccess(true);
-      try {
-        localStorage.setItem("px_visitor_registered", "true");
-        localStorage.setItem("px_visitor_name", name);
-      } catch {}
-      onRegisterSuccess?.(name);
+      onRegisterSuccess?.(resolvedName);
     } catch {
       setErrorMessage("Network error. Please try again.");
+      setTurnstileToken("");
+      setTurnstileResetKey((k) => k + 1);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleFinish = () => {
-    if (targetDestination?.url) {
+  const handleOpenDestination = () => {
+    if (targetDestination.url) {
       window.open(targetDestination.url, "_blank", "noopener,noreferrer");
     }
-    setIsSuccess(false);
     onClose();
   };
 
-  const handleDismiss = () => {
+  const handleResetModal = () => {
     setIsSuccess(false);
     setErrorMessage(null);
     reset();
@@ -148,8 +138,8 @@ export function VisitorPassModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={handleDismiss}
-            className="fixed inset-0 bg-black/85 backdrop-blur-md"
+            onClick={handleResetModal}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
           />
 
           {/* Modal / Cyber Sheet */}
@@ -158,19 +148,19 @@ export function VisitorPassModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 60, scale: 0.96 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-lg rounded-t-3xl sm:rounded-2xl border-2 border-[#ccff00] bg-[#0c0d0e] p-6 text-white shadow-[0px_0px_35px_rgba(204,255,0,0.2)] z-10 max-h-[92vh] overflow-y-auto"
+            className="relative w-full max-w-lg rounded-t-3xl sm:rounded-2xl border-2 border-[#ccff00] bg-[#0c0d0e] p-6 text-white shadow-[0px_0px_30px_rgba(204,255,0,0.15)] z-10 max-h-[92vh] overflow-y-auto"
           >
             {/* Header Badge */}
             <div className="flex items-center justify-between pb-3 border-b border-[#252a31]">
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-[#ccff00] animate-pulse" />
                 <span className="font-mono text-[11px] font-semibold tracking-wider text-[#ccff00] uppercase">
-                  {"// MEERUT TRADE SHOW • VISITOR CHECK-IN"}
+                  {"// MEERUT TRADE SHOW • DIGITAL VISITOR PASS"}
                 </span>
               </div>
               <button
                 type="button"
-                onClick={handleDismiss}
+                onClick={handleResetModal}
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900 text-neutral-400 hover:text-white hover:border-[#ccff00] transition"
               >
                 <X className="h-4 w-4" />
@@ -179,12 +169,12 @@ export function VisitorPassModal({
 
             {!isSuccess ? (
               <div className="mt-4">
-                <div className="mb-5 text-center sm:text-left">
-                  <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white">
-                    GET YOUR VISITOR PASS
+                <div className="mb-5">
+                  <h3 className="text-xl font-black uppercase tracking-tight text-white sm:text-2xl">
+                    UNLOCK {targetDestination.name}
                   </h3>
                   <p className="mt-1 font-mono text-xs text-neutral-400">
-                    Register once in 15 seconds to unlock direct access to our platforms, products, and stall lucky draw perks.
+                    Quick 15-second pass registration for live booth visitors at Meerut Trade Show.
                   </p>
                 </div>
 
@@ -291,8 +281,7 @@ export function VisitorPassModal({
                   <label className="flex items-start gap-2.5 cursor-pointer pt-1">
                     <input
                       type="checkbox"
-                      {...register("privacy_consent", { required: true })}
-                      defaultChecked
+                      {...register("privacy_consent", { required: "Please accept the Privacy Policy to continue." })}
                       className="mt-0.5 h-4 w-4 rounded border-neutral-700 bg-neutral-900 text-[#ccff00] accent-[#ccff00] focus:ring-0"
                     />
                     <span className="font-mono text-[11px] text-neutral-400 leading-tight">
@@ -307,6 +296,18 @@ export function VisitorPassModal({
                       .
                     </span>
                   </label>
+                  {errors.privacy_consent && (
+                    <p className="font-mono text-[11px] text-red-400">
+                      {errors.privacy_consent.message}
+                    </p>
+                  )}
+
+                  {/* Cloudflare Turnstile */}
+                  <TurnstileWidget
+                    onVerify={setTurnstileToken}
+                    resetKey={turnstileResetKey}
+                    className="pt-1"
+                  />
 
                   {/* Big Cyber Submit Button */}
                   <button
@@ -321,7 +322,7 @@ export function VisitorPassModal({
                       </>
                     ) : (
                       <>
-                        <span>CLAIM PASS & UNLOCK ALL ↗</span>
+                        <span>CLAIM PASS & CONTINUE</span>
                         <ArrowRight className="h-4 w-4 stroke-[3]" />
                       </>
                     )}
@@ -337,25 +338,36 @@ export function VisitorPassModal({
 
                 <div className="mt-4">
                   <span className="inline-block rounded-full bg-[#ccff00]/10 border border-[#ccff00]/30 px-3 py-1 font-mono text-[11px] font-bold text-[#ccff00] uppercase">
-                    {"// VISITOR PASS VERIFIED"}
+                    {"// ACCESS PASS GRANTED"}
                   </span>
                   <h3 className="mt-2 text-2xl font-black uppercase tracking-tight text-white">
                     WELCOME, {registeredName}!
                   </h3>
                   <p className="mt-1 font-mono text-xs text-neutral-400">
-                    All Pathixo platforms and stall privileges are now unlocked for you.
+                    Your visitor credentials have been verified at Meerut Trade Show.
                   </p>
+
+                  {existingVoucherCode && (
+                    <div className="mt-4 rounded-xl border border-dashed border-[#ccff00]/50 bg-[#141619] p-3 text-center">
+                      <span className="font-mono text-[10px] uppercase text-neutral-400 block">
+                        SAVED LUCKY DRAW REWARD: {existingPrizeName}
+                      </span>
+                      <span className="mt-1 inline-block font-mono text-lg font-black tracking-widest text-[#ccff00]">
+                        {existingVoucherCode}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Primary Destination Action */}
                 <div className="mt-6 space-y-3">
                   <button
                     type="button"
-                    onClick={handleFinish}
+                    onClick={handleOpenDestination}
                     className="flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] font-mono text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition"
                   >
-                    <ShieldCheck className="h-5 w-5 stroke-[2.5]" />
-                    <span>EXPLORE PATHIXO HUB ↗</span>
+                    <span>OPEN {targetDestination.name}</span>
+                    <ExternalLink className="h-4 w-4 stroke-[2.5]" />
                   </button>
 
                   {/* Lucky Draw Turn Button */}

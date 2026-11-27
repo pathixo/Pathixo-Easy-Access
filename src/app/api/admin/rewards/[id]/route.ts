@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireAdmin, logAuditEvent } from "@/lib/admin/auth";
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { getDevStore } from "@/lib/dev-store";
 import { apiError, apiSuccess } from "@/lib/security/errors";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,27 @@ export async function PATCH(
     const rewardId = params.id;
     const body = await req.json();
 
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      const store = getDevStore();
+      const target = store.rewards.find((r) => r.id === rewardId);
+      if (!target) {
+        return apiError("NOT_FOUND", "Reward not found.", 404);
+      }
+      if (body.name !== undefined) target.name = String(body.name).trim();
+      if (body.display_label !== undefined) target.display_label = String(body.display_label).trim();
+      if (body.description !== undefined) target.description = String(body.description).trim();
+      if (body.redemption_instructions !== undefined) target.redemption_instructions = String(body.redemption_instructions).trim();
+      if (body.remaining_inventory !== undefined) target.remaining_inventory = Number(body.remaining_inventory);
+      if (body.total_inventory !== undefined) target.total_inventory = Number(body.total_inventory);
+      if (body.max_cap !== undefined) {
+        target.max_cap = body.max_cap === null || body.max_cap === "" ? null : Number(body.max_cap);
+      }
+      if (body.probability_weight !== undefined) target.probability_weight = Number(body.probability_weight);
+      if (body.is_active !== undefined) target.is_active = Boolean(body.is_active);
+      if (body.expiry_days !== undefined) target.expiry_days = Number(body.expiry_days);
+      return apiSuccess(target);
+    }
+
     const serviceClient = getAdminClient();
 
     // Fetch existing values for audit log
@@ -24,10 +46,18 @@ export async function PATCH(
       .single();
 
     const updateData: Record<string, unknown> = {};
-    if (body.remaining_inventory !== undefined) updateData.remaining_inventory = body.remaining_inventory;
-    if (body.total_inventory !== undefined) updateData.total_inventory = body.total_inventory;
-    if (body.probability_weight !== undefined) updateData.probability_weight = body.probability_weight;
+    if (body.name !== undefined) updateData.name = String(body.name).trim();
+    if (body.display_label !== undefined) updateData.display_label = String(body.display_label).trim();
+    if (body.description !== undefined) updateData.description = String(body.description).trim();
+    if (body.redemption_instructions !== undefined) updateData.redemption_instructions = String(body.redemption_instructions).trim();
+    if (body.remaining_inventory !== undefined) updateData.remaining_inventory = Number(body.remaining_inventory);
+    if (body.total_inventory !== undefined) updateData.total_inventory = Number(body.total_inventory);
+    if (body.max_cap !== undefined) {
+      updateData.max_cap = body.max_cap === null || body.max_cap === "" ? null : Number(body.max_cap);
+    }
+    if (body.probability_weight !== undefined) updateData.probability_weight = Number(body.probability_weight);
     if (body.is_active !== undefined) updateData.is_active = Boolean(body.is_active);
+    if (body.expiry_days !== undefined) updateData.expiry_days = Number(body.expiry_days);
 
     const { data: updated, error } = await serviceClient
       .from("rewards")

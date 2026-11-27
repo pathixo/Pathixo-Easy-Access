@@ -1,10 +1,14 @@
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
 import { apiError, apiSuccess } from "@/lib/security/errors";
 
-export const revalidate = 60; // Cache for 60 seconds
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      return apiSuccess([]);
+    }
+
     const supabase = getAdminClient();
     const { data, error } = await supabase
       .from("products")

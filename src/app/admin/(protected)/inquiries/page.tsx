@@ -1,17 +1,37 @@
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { getDevStore } from "@/lib/dev-store";
 import { formatKolkataTime } from "@/lib/admin/utils";
 import { Download } from "lucide-react";
 import { InquiryStatusSelector } from "@/components/admin/InquiryStatusSelector";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminInquiriesPage() {
-  const supabase = getAdminClient();
+type InquiryRow = {
+  id: string;
+  full_name: string;
+  email: string;
+  mobile: string;
+  company: string | null;
+  service_needed: string | null;
+  project_description: string;
+  estimated_budget: string | null;
+  lead_status: string;
+  created_at: string;
+};
 
-  const { data: inquiries } = await supabase
-    .from("business_inquiries")
-    .select("*")
-    .order("created_at", { ascending: false });
+export default async function AdminInquiriesPage() {
+  let inquiries: InquiryRow[] = [];
+
+  if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+    inquiries = getDevStore().inquiries as InquiryRow[];
+  } else {
+    const supabase = getAdminClient();
+    const { data } = await supabase
+      .from("business_inquiries")
+      .select("*")
+      .order("created_at", { ascending: false });
+    inquiries = (data || []) as InquiryRow[];
+  }
 
   return (
     <div className="space-y-6 max-w-6xl">

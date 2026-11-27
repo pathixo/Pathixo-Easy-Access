@@ -3,88 +3,276 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
-import { Sparkles, Copy, Check, AlertCircle, ArrowLeft, Loader2, Gift } from "lucide-react";
+import {
+  Sparkles,
+  Copy,
+  Check,
+  AlertCircle,
+  Loader2,
+  Gift,
+  Volume2,
+  VolumeX,
+  MailCheck,
+  ArrowRight,
+} from "lucide-react";
+import { TurnstileWidget } from "./TurnstileWidget";
 
 interface RewardData {
   spin_id: string;
   reward_id: string;
   reward_name: string;
+  display_label?: string;
   reward_slug: string;
   reward_type: string;
   reward_description: string;
   reward_code: string;
   expires_at: string;
   redemption_instructions: string;
+  email_status?: string;
 }
 
-const SEGMENTS = [
-  { label: "15% Off Dev", slug: "discount-15-custom-dev", color: "#0c87eb" },
-  { label: "AI Consultation", slug: "free-ai-consultation", color: "#1e293b" },
-  { label: "Thank You Pass", slug: "thank-you-pass", color: "#0284c7" },
-  { label: "₹10K Credit", slug: "credit-10k-cloud", color: "#0f172a" },
-  { label: "Tech Swag", slug: "exclusive-merchandise", color: "#2563eb" },
-  { label: "Architecture Review", slug: "free-ai-consultation", color: "#1e293b" },
-  { label: "Special Pass", slug: "thank-you-pass", color: "#0284c7" },
-  { label: "Cloud Voucher", slug: "credit-10k-cloud", color: "#0f172a" },
+interface WheelSegment {
+  label: string;
+  slug: string;
+  color: string;
+  text: string;
+}
+
+interface RewardSummary {
+  slug: string;
+  name: string;
+  display_label?: string | null;
+}
+
+// Visual style palette. Segments are built from the rewards that are actually
+// active in the database, so the wheel can never show a prize the server will
+// not award (or award a prize that is not on the wheel).
+const SEGMENT_STYLES = [
+  { color: "#ccff00", text: "#0a0b0c" },
+  { color: "#16191d", text: "#f4f4f5" },
+  { color: "#ccff00", text: "#0a0b0c" },
+  { color: "#101214", text: "#ccff00" },
+  { color: "#16191d", text: "#f4f4f5" },
+  { color: "#101214", text: "#ccff00" },
+  { color: "#16191d", text: "#f4f4f5" },
+  { color: "#101214", text: "#a1a1aa" },
+  { color: "#ccff00", text: "#0a0b0c" },
 ];
 
+const FALLBACK_REWARDS: RewardSummary[] = [
+  { slug: "vakxo-1-year", name: "1-Year Vakxo Pro Subscription", display_label: "1-Yr Vakxo Pro" },
+  { slug: "discount-20-dev", name: "20% Off Custom Engineering Milestone", display_label: "20% Off Dev" },
+  { slug: "booth-tech-swag", name: "Pathixo Premium Tech Merchandise", display_label: "Booth Swag" },
+  { slug: "vakxo-1-month", name: "1-Month Vakxo Pro Access", display_label: "1-Mo Vakxo Pro" },
+  { slug: "ai-strategy-call", name: "Free 1-on-1 AI Architecture Review", display_label: "AI Strategy Call" },
+  { slug: "discount-50-cloud", name: "50% Off Cloud & DevOps Setup", display_label: "50% Off Cloud" },
+  { slug: "extended-trial-3mo", name: "3-Month krocPDF Team Pass", display_label: "3-Mo krocPDF" },
+  { slug: "vip-expo-pass", name: "VIP Exhibition Networking Voucher", display_label: "VIP Expo Pass" },
+  { slug: "thank-you-pass", name: "Special Exhibition Thank-You Voucher", display_label: "Thank You Pass" },
+];
+
+function toWheelSegments(rewards: RewardSummary[]): WheelSegment[] {
+  return rewards.map((reward, index) => ({
+    label: reward.display_label || reward.name,
+    slug: reward.slug,
+    ...SEGMENT_STYLES[index % SEGMENT_STYLES.length],
+  }));
+}
+
+const FALLBACK_SEGMENTS = toWheelSegments(FALLBACK_REWARDS);
+
 export function SpinWheel() {
-  const [loadingInitial, setLoadingInitial] = useState(true);
   const [isSpinning, setIsSpinning] = useState(false);
   const [unauthorized, setUnauthorized] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [rotation, setRotation] = useState(0);
   const [reward, setReward] = useState<RewardData | null>(null);
   const [copied, setCopied] = useState(false);
-  const wheelRef = useRef<HTMLDivElement>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [segments, setSegments] = useState<WheelSegment[]>(FALLBACK_SEGMENTS);
 
-  // 1. Check existing spin on mount
+  // Quick Inline Registration State for direct /spin visitors
+  const [regName, setRegName] = useState("");
+  const [regMobile, setRegMobile] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regConsent, setRegConsent] = useState(true);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [regError, setRegError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const tickIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const segmentsRef = useRef<WheelSegment[]>(FALLBACK_SEGMENTS);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("px_wheel_muted");
+    if (saved === "true") setIsMuted(true);
+  }, []);
+
+  const toggleSound = () => {
+    setIsMuted((prev) => {
+      const next = !prev;
+      localStorage.setItem("px_wheel_muted", String(next));
+      return next;
+    });
+  };
+
+  const getAudioContext = () => {
+    if (!audioCtxRef.current && typeof window !== "undefined") {
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) {
+        audioCtxRef.current = new AudioCtx();
+      }
+    }
+    if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
+      audioCtxRef.current.resume();
+    }
+    return audioCtxRef.current;
+  };
+
+  const playTickSound = () => {
+    if (isMuted) return;
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(850, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(320, ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.04);
+    } catch {
+      // Safe ignore
+    }
+  };
+
+  const playVictoryChime = () => {
+    if (isMuted) return;
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.1);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime + idx * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.1 + 0.4);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + idx * 0.1);
+        osc.stop(ctx.currentTime + idx * 0.1 + 0.45);
+      });
+    } catch {
+      // Safe ignore
+    }
+  };
+
+  // Keep the latest segment list available to the async spin handler.
+  useEffect(() => {
+    segmentsRef.current = segments;
+  }, [segments]);
+
+  // Load the active prize list so the wheel matches the server's real pool.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRewards() {
+      try {
+        const res = await fetch("/api/spin/rewards", { cache: "no-store" });
+        if (!res.ok) return;
+        const json = await res.json();
+        if (
+          !cancelled &&
+          json?.ok &&
+          Array.isArray(json.data) &&
+          json.data.length >= 2
+        ) {
+          setSegments(toWheelSegments(json.data as RewardSummary[]));
+        }
+      } catch {
+        // Keep the fallback wheel visible.
+      }
+    }
+
+    loadRewards();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Background check for an existing reward or visitor session.
+  // The wheel stays visible while this runs; only a confirmed missing session
+  // reveals the inline registration form.
   useEffect(() => {
     async function checkExisting() {
       try {
-        const res = await fetch("/api/spin/result");
+        const res = await fetch("/api/spin/result", { cache: "no-store" });
+
         if (res.status === 401) {
-          try {
-            localStorage.removeItem("px_visitor_registered");
-            localStorage.removeItem("px_visitor_name");
-          } catch {}
           setUnauthorized(true);
           return;
         }
 
-        const json = await res.json();
-        if (json.ok && json.data) {
+        // Valid session, but this visitor has not spun yet.
+        if (res.status === 404) {
+          setUnauthorized(false);
+          return;
+        }
+
+        const json = await res.json().catch(() => null);
+        if (res.ok && json?.ok && json.data) {
           const d = json.data;
           setReward({
             spin_id: d.spin_id,
             reward_id: d.reward?.id,
-            reward_name: d.reward?.name || "Exhibition Voucher",
-            reward_slug: d.reward?.slug || "thank-you-pass",
+            reward_name: d.reward?.name || "Trade Show Voucher",
+            display_label: d.reward?.display_label || d.reward?.name,
+            reward_slug: d.reward?.slug || "vip-expo-pass",
             reward_type: d.reward?.reward_type || "no_prize",
-            reward_description: d.reward?.description || "Thank you for visiting Pathixo at Expo Mart!",
+            reward_description: d.reward?.description || "Thank you for visiting Pathixo!",
             reward_code: d.reward_code,
             expires_at: d.expires_at,
             redemption_instructions:
-              d.reward?.redemption_instructions || "Show this code to our stall team.",
+              d.reward?.redemption_instructions || "Show this code at our booth counter.",
+            email_status: d.email_status,
           });
+          setUnauthorized(false);
+          return;
         }
+
+        // Do not leave the visitor with a dead wheel when the status check
+        // fails. Showing the pass form gives them a recoverable next step.
+        setUnauthorized(true);
+        setErrorMessage(
+          json?.error?.message ||
+            "We could not verify your pass. Enter your details to continue."
+        );
       } catch {
-        // Continue to allow spin attempt
-      } finally {
-        setLoadingInitial(false);
+        setUnauthorized(true);
+        setErrorMessage("Connection problem. Enter your details to continue.");
       }
     }
+
     checkExisting();
   }, []);
 
-  // 2. Spin Handler
-  const handleSpin = async () => {
+  // Core spin execution engine
+  const executeSpin = async () => {
     if (isSpinning || reward) return;
 
     setIsSpinning(true);
     setErrorMessage(null);
 
-    // Retrieve or create session idempotency key
     let idempotencyKey = sessionStorage.getItem("px_spin_idempotency");
     if (!idempotencyKey) {
       idempotencyKey = `spin_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -101,12 +289,13 @@ export function SpinWheel() {
       });
 
       if (res.status === 401) {
-        try {
-          localStorage.removeItem("px_visitor_registered");
-          localStorage.removeItem("px_visitor_name");
-        } catch {}
         setUnauthorized(true);
         setIsSpinning(false);
+        const card = document.getElementById("spin-pass-card");
+        if (card) {
+          card.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        setErrorMessage("Please enter your details below to unlock your guaranteed spin!");
         return;
       }
 
@@ -119,119 +308,261 @@ export function SpinWheel() {
 
       const outcome = json.data as RewardData;
 
-      // Find matching segment or default to index 2
-      let targetIndex = SEGMENTS.findIndex((s) => s.slug === outcome.reward_slug);
-      if (targetIndex === -1) targetIndex = 2;
+      let wheelSegments = segmentsRef.current;
+      let targetIndex = wheelSegments.findIndex((s) => s.slug === outcome.reward_slug);
 
-      // Calculate target angle
-      // 8 segments = 45 deg per segment. The pointer is at top (270 deg or 0 deg).
-      const segmentAngle = 360 / SEGMENTS.length;
-      // Center of target segment
+      // Defensive: if an admin activated a brand-new prize after this page
+      // loaded, add it to the wheel before animating so the pointer still
+      // lands on the reward the server actually awarded.
+      if (targetIndex === -1) {
+        wheelSegments = [
+          ...wheelSegments,
+          {
+            label: outcome.display_label || outcome.reward_name,
+            slug: outcome.reward_slug,
+            ...SEGMENT_STYLES[wheelSegments.length % SEGMENT_STYLES.length],
+          },
+        ];
+        setSegments(wheelSegments);
+        segmentsRef.current = wheelSegments;
+        targetIndex = wheelSegments.length - 1;
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      }
+
+      const segmentAngle = 360 / wheelSegments.length;
       const segmentCenter = targetIndex * segmentAngle + segmentAngle / 2;
-      // To bring target segment to top pointer:
-      const totalTurns = 5; // 5 full rotations
+      const totalTurns = 5;
       const targetDegree = totalTurns * 360 + (360 - segmentCenter);
 
       setRotation(targetDegree);
 
-      // Wait for CSS animation to finish (4.5s)
-      setTimeout(() => {
-        setIsSpinning(false);
-        setReward(outcome);
-        // Clear stored key on success
-        sessionStorage.removeItem("px_spin_idempotency");
+      let tickCount = 0;
+      const totalTicks = 35;
+      const tick = () => {
+        playTickSound();
+        tickCount++;
+        if (tickCount < totalTicks) {
+          const delay = 60 + Math.pow(tickCount / totalTicks, 2) * 200;
+          tickIntervalRef.current = setTimeout(tick, delay);
+        }
+      };
+      tick();
 
-        // Confetti burst
+      setTimeout(() => {
+        if (tickIntervalRef.current) clearTimeout(tickIntervalRef.current);
+        playVictoryChime();
+
         confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
+          particleCount: 130,
+          spread: 80,
+          origin: { y: 0.55 },
+          colors: ["#ccff00", "#ffffff", "#38bdf8"],
         });
+
+        setTimeout(() => {
+          setIsSpinning(false);
+          setReward(outcome);
+          sessionStorage.removeItem("px_spin_idempotency");
+        }, 900);
       }, 4500);
     } catch {
-      setErrorMessage("Network timeout while spinning. Please tap Spin again to retry with your saved key.");
+      if (tickIntervalRef.current) clearTimeout(tickIntervalRef.current);
+      setErrorMessage("Network timeout while spinning. Tap Spin again to retry.");
       setIsSpinning(false);
     }
   };
 
-  const copyCode = () => {
-    if (!reward?.reward_code) return;
-    navigator.clipboard.writeText(reward.reward_code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  // Click on the center circular SPIN button
+  const handleCenterSpinClick = () => {
+    if (unauthorized) {
+      const el = document.getElementById("spin-reg-name");
+      if (el) {
+        el.focus();
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      setErrorMessage("Please fill your name & mobile below to unlock your spin!");
+      return;
+    }
+    executeSpin();
   };
 
-  if (loadingInitial) {
-    return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-400" />
-        <p className="mt-3 text-xs text-neutral-400">Loading Lucky Draw status...</p>
-      </div>
-    );
-  }
+  // Quick 3-field inline registration (Directly unlocks & spins)
+  const handleQuickRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsRegistering(true);
+    setRegError(null);
 
-  if (unauthorized) {
-    return (
-      <div className="mx-auto max-w-md rounded-3xl border border-white/10 bg-[#121218] p-8 text-center shadow-2xl">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
-          <AlertCircle className="h-7 w-7" />
-        </div>
-        <h2 className="mt-4 text-xl font-bold text-white">Registration Required</h2>
-        <p className="mt-2 text-xs text-neutral-400 leading-relaxed">
-          The Lucky Draw is exclusively available to verified exhibition attendees. Please register your visit to unlock your spin.
-        </p>
-        <Link
-          href="/?register=true"
-          className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 font-semibold text-xs text-white transition hover:bg-brand-500"
-        >
-          <span>Register Now</span>
-        </Link>
-      </div>
-    );
-  }
+    const cleanMobile = regMobile.replace(/\D/g, "").slice(-10);
+    if (cleanMobile.length !== 10) {
+      setRegError("Please enter a valid 10-digit Indian mobile number.");
+      setIsRegistering(false);
+      return;
+    }
+
+    if (!regConsent) {
+      setRegError("Please consent to the privacy policy to proceed.");
+      setIsRegistering(false);
+      return;
+    }
+
+    const token =
+      turnstileToken ||
+      (process.env.NODE_ENV !== "production" ? "1x00000000000000000000AA" : "");
+
+    if (!token) {
+      setRegError("Please complete the security check before continuing.");
+      setIsRegistering(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: regName.trim(),
+          mobile: cleanMobile,
+          email: regEmail.trim().toLowerCase(),
+          privacy_consent: true,
+          turnstile_token: token,
+          interested_product: "all",
+          utm_source: "booth_spin_kiosk",
+          utm_medium: "lucky_draw",
+          utm_campaign: "meerut_expo_2026",
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        setRegError(json?.error?.message || "Registration failed. Please check your details.");
+        setIsRegistering(false);
+        // Turnstile tokens are single-use; request a fresh one for the retry.
+        setTurnstileToken("");
+        setTurnstileResetKey((key) => key + 1);
+        return;
+      }
+
+      // If returning visitor who has already spun, display previous winning voucher
+      if (json.data?.already_spun && json.data?.spin) {
+        const s = json.data.spin;
+        setReward({
+          spin_id: s.spin_id || "existing",
+          reward_id: s.reward_id || "existing",
+          reward_name: s.reward_name,
+          display_label: s.display_label || s.reward_name,
+          reward_slug: s.reward_slug || "vip-expo-pass",
+          reward_type: s.reward_type || "no_prize",
+          reward_description: s.reward_description,
+          reward_code: s.reward_code,
+          expires_at: s.expires_at,
+          redemption_instructions: s.redemption_instructions,
+          email_status: s.email_status || "pending",
+        });
+        setUnauthorized(false);
+        setIsRegistering(false);
+        return;
+      }
+
+      // Successful new registration (signed cookie set on response)
+      setUnauthorized(false);
+      setIsRegistering(false);
+
+      // Automatically trigger the spin!
+      executeSpin();
+    } catch {
+      setRegError("Network error. Please try again.");
+      setIsRegistering(false);
+      setTurnstileToken("");
+      setTurnstileResetKey((key) => key + 1);
+    }
+  };
+
+  const copyCode = async () => {
+    if (!reward?.reward_code) return;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(reward.reward_code);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = reward.reward_code;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Safe fallback
+    }
+  };
 
   return (
-    <div className="mx-auto max-w-md px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-md px-4 py-2 sm:px-6">
       {!reward ? (
         <div className="text-center">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-xs font-semibold text-brand-300">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>One Guaranteed Reward Per Visitor</span>
+          {/* Sound Toggle Bar */}
+          <div className="flex items-center justify-between mb-3">
+            <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+              {"// 1 GUARANTEED PRIZE"}
+            </span>
+            <button
+              onClick={toggleSound}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 bg-[#141619] px-2.5 font-mono text-[11px] text-neutral-300 hover:border-[#ccff00]/50 transition"
+            >
+              {isMuted ? (
+                <>
+                  <VolumeX className="h-3.5 w-3.5 text-neutral-500" />
+                  <span className="text-neutral-500">MUTED</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="h-3.5 w-3.5 text-[#ccff00]" />
+                  <span className="text-[#ccff00]">SFX ON</span>
+                </>
+              )}
+            </button>
           </div>
 
-          <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-            Spin & Win Lucky Draw
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white sm:text-4xl">
+            SPIN & WIN <span className="text-[#ccff00]">REWARDS</span>
           </h1>
-          <p className="mt-1 text-xs text-neutral-400">
-            Tap the center button to spin. Your outcome is cryptographically generated on our server.
+          <p className="mt-1.5 font-mono text-xs text-neutral-400">
+            {unauthorized
+              ? "Enter your details below to unlock your guaranteed turn."
+              : "Tap the center SPIN button to claim your trade show voucher."}
           </p>
 
           {errorMessage && (
-            <div className="mt-4 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
+            <div className="mt-4 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 font-mono text-xs text-red-300">
               <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
               <span>{errorMessage}</span>
             </div>
           )}
 
-          {/* SVG Wheel Container (fits 320px effortlessly on 360px screens) */}
-          <div className="relative mx-auto mt-8 flex h-[310px] w-[310px] items-center justify-center">
-            {/* Pointer Marker (Top) */}
-            <div className="absolute -top-3 z-20 flex flex-col items-center">
-              <div className="h-0 w-0 border-x-8 border-x-transparent border-t-[16px] border-t-brand-400 drop-shadow-md" />
+          {/* Cyber Lime & Stealth Carbon Wheel Container - ALWAYS VISIBLE */}
+          <div className="relative mx-auto mt-7 flex h-[310px] w-[310px] items-center justify-center select-none">
+            {/* Top Cyber Lime Pointer */}
+            <div className="absolute -top-3.5 z-20 flex flex-col items-center">
+              <div className="h-0 w-0 border-x-[10px] border-x-transparent border-t-[20px] border-t-[#ccff00] drop-shadow-[0_2px_8px_rgba(204,255,0,0.6)]" />
             </div>
 
             {/* Rotating Wheel Body */}
             <div
-              ref={wheelRef}
               style={{
                 transform: `rotate(${rotation}deg)`,
-                transition: isSpinning ? "transform 4.5s cubic-bezier(0.15, 0.9, 0.25, 1.0)" : "none",
+                transition: isSpinning
+                  ? "transform 4.5s cubic-bezier(0.12, 0.95, 0.22, 1.0)"
+                  : "none",
+                willChange: "transform",
               }}
-              className="h-[300px] w-[300px] rounded-full border-4 border-white/20 shadow-2xl relative overflow-hidden"
+              className="h-[300px] w-[300px] rounded-full border-4 border-[#ccff00]/60 shadow-[0_0_30px_rgba(204,255,0,0.12)] relative overflow-hidden bg-[#101214]"
             >
               <svg viewBox="0 0 100 100" className="h-full w-full">
-                {SEGMENTS.map((seg, i) => {
-                  const angle = 360 / SEGMENTS.length;
+                {segments.map((seg, i) => {
+                  const angle = 360 / segments.length;
                   const startAngle = i * angle;
                   const endAngle = (i + 1) * angle;
 
@@ -244,14 +575,14 @@ export function SpinWheel() {
 
                   return (
                     <g key={i}>
-                      <path d={pathData} fill={seg.color} stroke="#09090b" strokeWidth="0.5" />
-                      {/* Segment Text */}
+                      <path d={pathData} fill={seg.color} stroke="#0a0b0c" strokeWidth="0.7" />
                       <text
                         x="50"
-                        y="18"
-                        fill="#f4f4f5"
-                        fontSize="3.6"
-                        fontWeight="bold"
+                        y="17"
+                        fill={seg.text}
+                        fontSize="3.4"
+                        fontWeight="800"
+                        fontFamily="monospace"
                         textAnchor="middle"
                         transform={`rotate(${startAngle + angle / 2}, 50, 50)`}
                       >
@@ -263,73 +594,223 @@ export function SpinWheel() {
               </svg>
             </div>
 
-            {/* Center Spin Button */}
+            {/* Center Tactile Cyber Lime Spin Button */}
             <button
-              onClick={handleSpin}
-              disabled={isSpinning}
-              className="absolute z-30 flex h-20 w-20 flex-col items-center justify-center rounded-full border-2 border-white/30 bg-[#09090b] text-white shadow-xl transition active:scale-95 hover:border-brand-400 disabled:opacity-80"
+              onClick={handleCenterSpinClick}
+              disabled={isSpinning || isRegistering}
+              className="absolute z-30 flex h-20 w-20 flex-col items-center justify-center rounded-full border-2 border-black bg-[#ccff00] text-black shadow-cyber transition active:scale-95 hover:bg-[#d9ff33] disabled:opacity-80 cursor-pointer"
             >
-              <Sparkles className="h-4 w-4 text-brand-400" />
-              <span className="text-[11px] font-extrabold uppercase tracking-wider">
+              <Sparkles className="h-4 w-4 text-black stroke-[2.5]" />
+              <span className="font-mono text-xs font-black uppercase tracking-wider">
                 {isSpinning ? "..." : "SPIN"}
               </span>
             </button>
           </div>
+
+          {/* Quick Registration Form Card - displayed right below the wheel if user needs pass */}
+          {unauthorized && !isSpinning && (
+            <div
+              id="spin-pass-card"
+              className="mt-8 rounded-2xl border-2 border-[#252a31] bg-[#101214] p-5 text-left shadow-cyber transition hover:border-[#ccff00]/40 sm:p-6"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#ccff00]">
+                  {"// 1 GUARANTEED LUCKY DRAW"}
+                </span>
+                <span className="rounded-full bg-[#ccff00]/10 border border-[#ccff00]/30 px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#ccff00]">
+                  FREE ENTRY
+                </span>
+              </div>
+
+              <h2 className="mt-2 text-xl font-black uppercase tracking-tight text-white">
+                CLAIM PASS TO <span className="text-[#ccff00]">SPIN WHEEL</span>
+              </h2>
+              <p className="mt-1 font-mono text-xs text-neutral-400">
+                Enter your details to generate your digital stall pass and immediately spin.
+              </p>
+
+              <form onSubmit={handleQuickRegister} className="mt-4 space-y-3 font-mono">
+                {regError && (
+                  <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
+                    <span>{regError}</span>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-300">
+                    Full Name *
+                  </label>
+                  <input
+                    id="spin-reg-name"
+                    type="text"
+                    required
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    placeholder="e.g. Rahul Sharma"
+                    className="mt-1 h-11 w-full rounded-xl border border-[#252a31] bg-[#0c0d0e] px-3.5 text-sm font-semibold text-white placeholder-neutral-600 focus:border-[#ccff00] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-300">
+                    WhatsApp / Mobile Number *
+                  </label>
+                  <div className="mt-1 flex">
+                    <span className="inline-flex h-11 items-center rounded-l-xl border border-r-0 border-[#252a31] bg-[#141619] px-3 text-xs font-bold text-neutral-400">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      maxLength={10}
+                      value={regMobile}
+                      onChange={(e) => setRegMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      placeholder="9876543210"
+                      className="h-11 flex-1 rounded-r-xl border border-[#252a31] bg-[#0c0d0e] px-3.5 text-sm font-semibold tracking-wider text-white placeholder-neutral-600 focus:border-[#ccff00] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-300">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    placeholder="rahul@company.com"
+                    className="mt-1 h-11 w-full rounded-xl border border-[#252a31] bg-[#0c0d0e] px-3.5 text-sm font-semibold text-white placeholder-neutral-600 focus:border-[#ccff00] focus:outline-none"
+                  />
+                </div>
+
+                <div className="pt-1">
+                  <label className="flex items-start gap-2.5 cursor-pointer text-[10px] text-neutral-400 leading-snug">
+                    <input
+                      type="checkbox"
+                      checked={regConsent}
+                      onChange={(e) => setRegConsent(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-[#252a31] bg-[#0c0d0e] accent-[#ccff00]"
+                    />
+                    <span>
+                      I agree to receive my prize voucher code via email under the DPDP Act 2023.
+                    </span>
+                  </label>
+                </div>
+
+                <TurnstileWidget
+                  onVerify={setTurnstileToken}
+                  resetKey={turnstileResetKey}
+                  className="pt-1"
+                />
+
+                <button
+                  type="submit"
+                  disabled={
+                    isRegistering ||
+                    (!turnstileToken && process.env.NODE_ENV === "production")
+                  }
+                  className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition disabled:opacity-50 cursor-pointer"
+                >
+                  {isRegistering ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin text-black" />
+                      <span>UNLOCKING & SPINNING...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>UNLOCK & SPIN WHEEL NOW</span>
+                      <ArrowRight className="h-4 w-4 stroke-[3]" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       ) : (
-        /* Reward Voucher Card */
-        <div className="rounded-3xl border border-brand-500/30 bg-gradient-to-b from-[#161622] to-[#101016] p-6 text-center shadow-2xl sm:p-8">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20">
-            <Gift className="h-7 w-7" />
+        /* Cyber Voucher Reward Card */
+        <div className="rounded-2xl border-2 border-[#ccff00]/40 bg-[#101214] p-6 text-center shadow-cyber sm:p-8">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border-2 border-black bg-[#ccff00] text-black shadow-cyber-sm">
+            <Gift className="h-7 w-7 stroke-[2.5]" />
           </div>
 
-          <span className="mt-3 inline-block rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-0.5 text-xs font-semibold text-emerald-400">
-            Reward Verified & Assigned
+          <span className="mt-4 inline-block rounded-full border border-[#ccff00]/30 bg-[#ccff00]/10 px-3 py-0.5 font-mono text-[11px] font-bold uppercase text-[#ccff00]">
+            {"// REWARD ALLOCATED"}
           </span>
 
-          <h2 className="mt-3 text-xl font-extrabold text-white sm:text-2xl">
+          <h2 className="mt-2.5 text-2xl font-black uppercase tracking-tight text-white">
             {reward.reward_name}
           </h2>
 
-          <p className="mt-2 text-xs text-neutral-300 leading-relaxed sm:text-sm">
+          <p className="mt-2 font-mono text-xs text-neutral-300 leading-relaxed">
             {reward.reward_description}
           </p>
 
-          {/* Unique Voucher Code Box */}
-          <div className="mt-6 rounded-2xl border border-dashed border-brand-500/40 bg-brand-950/20 p-4">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-brand-400">
-              Your Exclusive Voucher Code
+          {/* Voucher Code Box */}
+          <div className="mt-5 rounded-xl border-2 border-dashed border-[#ccff00]/50 bg-[#0a0b0c] p-4">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+              OFFICIAL VOUCHER CODE
             </span>
-            <div className="mt-1 flex items-center justify-center gap-3">
-              <span className="font-mono text-2xl font-extrabold tracking-widest text-white sm:text-3xl">
+            <div className="mt-1.5 flex items-center justify-center gap-3">
+              <span className="font-mono text-2xl font-black tracking-widest text-[#ccff00] sm:text-3xl">
                 {reward.reward_code}
               </span>
               <button
                 onClick={copyCode}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-neutral-300 transition hover:bg-white/20 active:scale-95"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-[#16191d] text-neutral-300 hover:border-[#ccff00] hover:text-[#ccff00] active:scale-95 transition cursor-pointer"
                 title="Copy code"
               >
-                {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                {copied ? <Check className="h-4 w-4 text-[#ccff00]" /> : <Copy className="h-4 w-4" />}
               </button>
             </div>
-            {copied && <p className="mt-1 text-[11px] text-emerald-400">Copied to clipboard!</p>}
+            {copied && (
+              <p className="mt-1.5 font-mono text-[11px] font-bold text-[#ccff00]">
+                COPIED TO CLIPBOARD!
+              </p>
+            )}
           </div>
 
-          {/* Redemption Instructions */}
-          <div className="mt-6 rounded-xl border border-white/5 bg-white/5 p-3.5 text-left text-xs text-neutral-400">
-            <span className="font-semibold text-neutral-200">How to Redeem:</span>
+          {/* Email delivery status — never claim "sent" before it is confirmed */}
+          <div className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#141619] p-3 font-mono text-[11px] text-neutral-300">
+            <MailCheck
+              className={`h-4 w-4 shrink-0 ${
+                reward.email_status === "sent" ? "text-[#ccff00]" : "text-amber-400"
+              }`}
+            />
+            <span>
+              {reward.email_status === "sent"
+                ? "Voucher details sent to your registered email."
+                : reward.email_status === "failed" ||
+                    reward.email_status === "not_configured"
+                  ? "Email delivery is unavailable. Please screenshot this code."
+                  : "Voucher email is being prepared. Please keep this code safe."}
+            </span>
+          </div>
+
+          {/* Claim Instructions */}
+          <div className="mt-4 rounded-xl border border-white/10 bg-[#141619] p-3.5 text-left font-mono text-xs text-neutral-400">
+            <span className="font-bold text-white uppercase">How to Claim:</span>
             <p className="mt-1 leading-relaxed">{reward.redemption_instructions}</p>
             <p className="mt-2 text-[10px] text-neutral-500">
-              Valid until: {new Date(reward.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+              Valid until:{" "}
+              {new Date(reward.expires_at).toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
             </p>
           </div>
 
-          <div className="mt-6 flex flex-col gap-2.5">
+          <div className="mt-6">
             <Link
               href="/"
-              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-brand-600 font-semibold text-xs text-white transition hover:bg-brand-500"
+              className="flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] font-mono text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition"
             >
-              <span>Explore Products & Services</span>
+              <span>BACK TO PATHIXO HUB</span>
+              <ArrowRight className="h-4 w-4 stroke-[3]" />
             </Link>
           </div>
         </div>
