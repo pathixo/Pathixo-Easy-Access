@@ -16,6 +16,7 @@ export interface VisitorPassModalProps {
     url: string;
     category?: string;
   };
+  onRegisterSuccess?: (name: string) => void;
 }
 
 interface FormInputs {
@@ -30,6 +31,7 @@ export function VisitorPassModal({
   isOpen,
   onClose,
   targetDestination,
+  onRegisterSuccess,
 }: VisitorPassModalProps) {
   const utm = useUtm();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,8 +99,10 @@ export function VisitorPassModal({
         setExistingPrizeName(data.data.spin.reward_name);
       }
 
-      setRegisteredName(data.data?.full_name || values.full_name);
+      const resolvedName = data.data?.full_name || values.full_name;
+      setRegisteredName(resolvedName);
       setIsSuccess(true);
+      onRegisterSuccess?.(resolvedName);
     } catch {
       setErrorMessage("Network error. Please try again.");
     } finally {
