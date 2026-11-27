@@ -7,8 +7,8 @@
 | 2 Backend APIs | done | All 6 endpoints built (/api/register, /api/spin, /api/spin/result, /api/inquiry, /api/products, /api/events); strict Zod validation, Turnstile, session security, rate limiters, build passing |
 | 3 Public UI | done | Minimalist mobile-first UI built; Hero, Products, Services, Approach, Registration, Inquiry modal, Spin & Win wheel with confetti, /privacy, /terms; build passing |
 | 4 Admin | done | Admin auth via Supabase Auth + @supabase/ssr; role hierarchy (super_admin, admin, viewer); dashboard, leads table, inquiries pipeline, stall voucher quick-redemption tool, streaming CSV exports with formula injection protection, audit logs, admin CLI script; build passing |
-| 5 Security + tests | not started | Next up (Security headers, CSP, concurrent spin test, inventory race test, rate-limit load test) |
-| 6 Deploy + QR | not started | |
+| 5 Security + tests | done | Strict CSP headers, HSTS, frame denial, rate limit burst tests passing (20/20), security boundaries passing (6/6: RLS anon access blocked, mass assignment rejected, IDOR token verified), concurrency scripts ready in /tests; build passing |
+| 6 Deploy + QR | not started | Next up (Vercel deployment setup, production redirect URLs, high-res QR code generator) |
 | 7 Docs + runbook | not started | |
 
 ## Decisions needed
