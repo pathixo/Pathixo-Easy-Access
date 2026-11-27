@@ -5,8 +5,8 @@
 | 0 Accounts/assets | done | Supabase dev project created; keys in .env.local; connection verified; remote git linked |
 | 1 Scaffold + DB | done | Next.js scaffold created; SQL migrations, RLS, spin function, seed data applied and verified |
 | 2 Backend APIs | done | All 6 endpoints built (/api/register, /api/spin, /api/spin/result, /api/inquiry, /api/products, /api/events); strict Zod validation, Turnstile, session security, rate limiters, build passing |
-| 3 Public UI | not started | Ready to plan |
-| 4 Admin | not started | Can run in parallel or after Phase 3 |
+| 3 Public UI | done | Minimalist mobile-first UI built; Hero, Products, Services, Approach, Registration, Inquiry modal, Spin & Win wheel with confetti, /privacy, /terms; build passing |
+| 4 Admin | not started | Next up (Admin login, dashboard, lead triage, lucky draw redemption, CSV export, audit logs) |
 | 5 Security + tests | not started | |
 | 6 Deploy + QR | not started | |
 | 7 Docs + runbook | not started | |
