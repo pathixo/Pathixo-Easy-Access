@@ -8,7 +8,6 @@ import { FloatingSpinBot } from "./FloatingSpinBot";
 import {
   Sparkles,
   Zap,
-  FileText,
   Instagram,
   Linkedin,
   Facebook,
@@ -228,8 +227,14 @@ export function CyberPortal() {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3.5">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-neutral-700/80 bg-neutral-800/80 text-white group-hover:border-[#ccff00] group-hover:bg-[#ccff00] group-hover:text-black transition">
-                      <FileText className="h-5 w-5 stroke-[2.2]" />
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-neutral-700/80 bg-[#0d0e10] p-2 text-white group-hover:border-[#ccff00] transition">
+                      <Image
+                        src="/assets/images/krocpdf-logo.png"
+                        alt="krocPDF Logo"
+                        width={44}
+                        height={44}
+                        className="h-full w-full object-contain"
+                      />
                     </div>
                     <div>
                       <span className="inline-block rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 uppercase tracking-wide">
