@@ -2,244 +2,193 @@
 
 > **Document Type:** Master Product Specification & AI Context Omnibook  
 > **Project Name:** Pathixo Easy Access (`Pathixo-Easy-Access`)  
-> **Target Platform:** Mobile-First Web Application (QR-Accessed)  
+> **Company:** PATHIXO PRIVATE LIMITED  
+> **Target Platform:** Mobile-First Web Application (QR-Accessed at Expos & Summits)  
 > **Primary Purpose:** Instant On-Ground Event Hub, Lead Capture & User Acquisition for Pathixo  
+> **Active Event:** Meerut Trade Show 2026 (Pathixo Technology Pavilion)  
+> **Production URL:** `https://expo.pathixo.com`  
 > **Last Updated:** November 2026  
 
 ---
 
 ## 1. Executive Summary & Vision
 
-**Pathixo Easy Access** is a rapid-deployment, mobile-dedicated web platform engineered specifically for on-ground expos, tech events, university summits, and startup showcases.
+**Pathixo Easy Access** is a rapid-deployment, mobile-dedicated web platform engineered specifically for on-ground expos, tech summits, trade shows, and startup showcases by **PATHIXO PRIVATE LIMITED**.
 
-When visitors and students approach the Pathixo booth or banners, they scan a physical QR code that immediately opens this lightweight, high-performance web experience in their native mobile browser. The platform functions as both an instantaneous navigation directory (providing direct links to Pathixo's core website, featured products, clearance deals, and memberships) and an interactive lead acquisition engine powered by a gamified "Spin the Wheel" lucky draw.
+When visitors, students, and prospective clients approach the Pathixo exhibition pavilion or banners, they scan a physical QR code that immediately launches this lightweight, high-performance web experience in their native mobile browser. The platform serves a dual mission:
+1. **Instant Navigation Directory:** Delivers thumb-friendly, oversized access buttons to the main Pathixo corporate platform, flagship proprietary products (**Vakxo** and **krocPDF**), clearance deals, and engineering services.
+2. **High-Velocity Lead Acquisition Engine:** Converts physical booth foot traffic into verified, qualified leads (Name, Email, WhatsApp Phone Number) gated by an interactive "Spin the Wheel" lucky draw engine.
 
 ### Core Strategic Objectives
-1. **High-Velocity Lead Capture (Primary Goal):** Convert foot traffic, students, and expo attendees into verified, qualified leads (Name, Email, WhatsApp/Phone Number) before they leave the booth.
-2. **Instant Navigation Hub:** Eliminate the friction of searching for URLs by presenting thumb-friendly, oversized action buttons linking to the Pathixo ecosystem.
-3. **Incentivized Engagement (Gamification):** Hook visitors with an interactive "Spin the Wheel" lucky draw offering real-time discounts, offers, trial memberships, and clearance specials.
-4. **On-Ground Robustness:** Deliver sub-second loading speeds and rock-solid reliability even in crowded expo venues with congested cellular network connections.
+* **Instantaneous On-Ground Lead Capture (Primary Goal):** Collect verified student and attendee leads before they leave the booth, populating the central CRM pipeline.
+* **Frictionless Navigation:** Zero app-install barrier; instantaneous loading on spotty 4G cellular networks via Vercel Edge CDN.
+* **Gamified Lucky Draw ("Spin the Wheel"):** Boost booth engagement and excitement with real-time discounts, Vakxo developer passes, krocPDF memberships, and service coupons.
+* **Audience Acquisition for Flagship Products:** Drive immediate high-intent traffic to:
+  * **Vakxo:** Voice-Native, Local-First Autonomous Desktop AI Dev Agent (`https://vakxo.pathixo.com/`).
+  * **krocPDF:** Device-local, 100% private document productivity suite (`https://www.krocpdf.app`).
+  * **Pathixo Corporate:** Full-stack AI, mobile, web, and cloud engineering services (`https://pathixo.com/`).
 
 ---
 
-## 2. Target Audience & Event Context
+## 2. Target Audience & Event Realities
 
 ### 2.1 User Personas
-* **College Students & Tech Enthusiasts:** Looking for quick freebies, student discounts, platform trials, and exciting tech products. Attention span is short (< 15 seconds).
-* **Expo Visitors & Early Adopters:** Looking for innovative tools, exclusive expo offers, and rapid overviews of what Pathixo builds.
-* **Partners & Potential Investors:** Looking for a quick one-tap path to review the main Pathixo website, company portfolio, and contact credentials.
+* **College Students & Budding Developers:** Drawn to cutting-edge AI dev tools (Vakxo), looking for trial memberships, promo codes, student discounts, and career opportunities. Attention span is short (< 15 seconds).
+* **Business Owners & Enterprise Visitors:** Exploring digital transformation, custom AI systems, or enterprise app development from Pathixo's engineering team.
+* **Booth Walk-ins & Expo Attendees:** Curious visitors attracted by the "Spin & Win" banners and digital visitor pass gamification.
 
-### 2.2 Environmental Constraints (The "Expo Reality")
-* **Cellular Network Congestion:** Hundreds or thousands of devices connected to nearby cell towers simultaneously. Page weight must be ultra-light, avoiding bloated external dependencies.
-* **Diverse In-App Browsers:** Users will scan QR codes using default camera apps, Google Lens, Instagram, WhatsApp, or third-party QR scanners. The web app must operate seamlessly inside sandboxed webviews without broken cookies, pop-up blockers, or layout breaks.
-* **One-Handed Mobile Interaction:** Users are standing, walking, holding bags, or talking to booth reps. Navigation buttons must be oversized, ergonomic, and centered in the thumb reach zone.
+### 2.2 On-Ground Expo Constraints
+* **Cellular Congestion:** Dense crowds straining 4G/5G mobile towers. Page weight must stay ultra-lean (< 120 KB gzipped) with no blocking external scripts or heavy font files.
+* **In-App Browser Sandboxes:** QR scans frequently launch inside Google Lens, Instagram, WhatsApp, or default camera webviews. The platform must avoid reliance on external pop-ups, multi-window flows, or fragile cookie policies.
+* **Ergonomic One-Handed Operation:** Attendees are standing, walking, holding merchandise, or talking to staff. All primary interaction elements must occupy the ergonomic thumb zone with $\ge 44-56\text{px}$ touch targets.
 
 ---
 
-## 3. System Architecture & User Flow
+## 3. System Architecture & Flow
 
 ```
-[Physical Expo Banner / QR Code]
-             │
-             ▼
-   [Instant QR Scan] (Camera / Lens / In-App Browser)
-             │
-             ▼
-[Pathixo Easy Access Mobile Web App]
-   ├── 1. Brand Header (Pathixo Logo & Tagline)
-   ├── 2. Primary Showcase Button: "🎡 Spin the Wheel & Win!"
-   └── 3. Quick-Access Link Grid:
-          ├── Main Pathixo Website
-          ├── Product A Showcase
-          ├── Product B Showcase
-          ├── Special Expo Deals & Clearance
-          └── Community & Social Channels
-             │
-             ▼ (User taps "Spin the Wheel")
-[Lead Capture Gate Pop-up / Modal]
-   ├── Full Name
-   ├── Email Address
-   ├── Phone / WhatsApp Number
-   └── [ "Unlock My Spin" Button ]
-             │
-             ▼ (Validation Passed & Lead Saved)
-[Interactive Spin the Wheel Engine]
-   ├── Wheel Rotation Animation & Haptic/Sound
-   ├── Outcome Calculation (Discount / Offer / Membership)
-   └── Reward Screen:
-          ├── Custom Voucher Code
-          ├── "Copy Code" & "Claim on Pathixo" CTA
-          └── WhatsApp / SMS confirmation trigger
+           [Physical Expo Banner / Stall QR Code]
+                             │
+                             ▼
+     [Instant Scan] (Camera / Lens / WhatsApp / Browser)
+                             │
+                             ▼
+             [Pathixo Easy Access Mobile Portal]
+                             │
+         ┌───────────────────┴───────────────────┐
+         ▼                                       ▼
+  [Digital Visitor Pass]                  [Cyber-Portal Hub]
+  (Auto-prompt Lead Modal)                 ├── Brand Header (Pathixo)
+    ├── Full Name                          ├── Quick Access Links:
+    ├── Email Address                      │     ├── Pathixo Main Website
+    ├── Phone / WhatsApp Number            │     ├── Vakxo AI Dev Agent
+    └── Turnstile Verification             │     ├── krocPDF Document Suite
+         │                                 │     └── Engineering Services
+         ▼                                 └── Floating Spin Bot Widget
+  [Pass Issued + Session Cookie]                         │
+         │                                               │
+         └───────────────────┬───────────────────────────┘
+                             ▼
+             [Spin & Win Lucky Draw Wheel]
+               ├── Interactive Wheel Physics
+               ├── Server-Side Atomic Stored Procedure
+               └── Instant Reward Voucher Card:
+                     ├── Unique Voucher Code (e.g. VAKXO-A7F29C1B)
+                     ├── One-Tap Copy
+                     └── Direct Platform Claim Link
 ```
 
 ---
 
 ## 4. Feature Specifications
 
-### 4.1 Mobile-First UI & Link Hub
-* **Strict Mobile Form Factor:** Designed explicitly for mobile viewports (360px to 430px width standard). If loaded on desktop monitors, the interface should render within a centered, sleek mobile container mockup to preserve the intended layout.
-* **Oversized Action Buttons:**
-  * Minimum touch target size: 56px height with generous margins.
-  * Tactile feedback: CSS active states (`transform: scale(0.98)`), micro-haptic animations.
-  * Visual Hierarchy:
-    1. **Hero CTA (Primary Glow / Shimmer):** "🎡 Spin to Win Discounts & Rewards!"
-    2. **Secondary Core Action:** "🌐 Visit Main Pathixo Website"
-    3. **Tertiary Product Badges:** Direct product links with icons and micro-copy (e.g., "Product Alpha – Explore Now", "Exclusive Expo Offers").
-* **Zero Navigation Clutter:** No complex hamburger menus or deep nested pages. Everything is accessible in a single scrollable mobile view.
+### 4.1 Mobile-First UI & Link Directory
+* **Viewport Standards:** Native optimization for 360px, 390px, and 414px mobile viewports. On desktop viewports ($\ge 1024\text{px}$), the UI renders as an expansive dual-column cyber command portal.
+* **High-Contrast Touch Buttons:**
+  * Minimum touch target height: 56px.
+  * Tactile micro-interactions: Active scale down (`0.98`), luminous border glows, electric lime (`#ccff00`) and amber accents.
+* **Direct Navigation Links:**
+  * **Main Website:** `https://pathixo.com/`
+  * **Vakxo Platform:** `https://vakxo.pathixo.com/` (Voice-Native Autonomous AI Dev Agent)
+  * **krocPDF App:** `https://www.krocpdf.app` (Private On-Device Document Suite)
+  * **Lucky Draw / Spin:** `/spin` or via the interactive `FloatingSpinBot` widget.
 
-### 4.2 Lead Capture Gate (Pre-Spin Modal)
-To play the lucky draw, users must first submit their information. This is the core data funnel of the platform.
-
-* **Required Form Fields:**
-  1. **Full Name:** Text input, minimum 2 characters.
-  2. **Email Address:** Standard RFC-compliant email validation.
-  3. **Phone Number:** 10-digit mobile number with international country code selector (defaulting to local region, e.g., `+91`).
-* **Micro-Copy & Incentives:**
-  * Title: *"Win Up to 50% Off & Exclusive Pathixo Memberships!"*
-  * Subtitle: *"Enter your details below to unlock your lucky spin."*
-* **Consent & Compliance:**
-  * Concise opt-in note: *"By continuing, you agree to receive your reward code and updates via WhatsApp/Email."*
-* **UX Nuances:**
-  * Autofill-friendly attributes (`autocomplete="name"`, `autocomplete="email"`, `autocomplete="tel"`).
-  * Smooth transition directly from form submission into the active wheel view without page reload.
+### 4.2 Pre-Spin Lead Capture Gate (Visitor Pass Modal)
+* **Mandatory Entry Verification:** To spin the wheel and claim discounts, the user must register their details.
+* **Input Fields:**
+  * **Full Name:** Required, 2–100 characters, sanitised.
+  * **Email Address:** Valid RFC email syntax, trimmed.
+  * **Phone Number:** 10–15 digits, international phone format supported.
+* **Security & Bot Defense:**
+  * Cloudflare Turnstile token validation prior to submission.
+  * Upstash Redis rate limiting (sliding window: 5 registrations / min / IP).
+  * Unique constraint on `(event_code, phone)` and `(event_code, email)` preventing duplicate spin farming.
+* **Session Issuance:**
+  * Upon valid registration, server sets an encrypted, signed `jose` JWT in an `HttpOnly`, `Secure`, `SameSite=Lax` session cookie (`pathixo_session`).
 
 ### 4.3 Gamification Engine: "Spin the Wheel"
-* **Mechanics & Appearance:**
-  * Circular multi-segment wheel (typically 6 to 8 segments) styled with Pathixo brand colors.
-  * Segment Examples:
-    * `10% Off Any Pathixo Plan`
-    * `20% Off Pathixo Core`
-    * `Free 1-Month Premium Membership`
-    * `Exclusive Expo Clearance Pass`
-    * `Mega Mystery Reward`
-    * `Better Luck Next Spin` *(or replaced with minimum guaranteed reward for high user satisfaction)*
-* **Reward Distribution Logic:**
-  * Configurable weighting parameters (e.g., higher probability for introductory discounts, controlled rarity for full free memberships).
-  * Guaranteed "Win" feeling to maintain high attendee enthusiasm at the booth.
-* **Winner Modal / Claim Card:**
-  * Celebratory confetti animation (lightweight CSS/canvas).
-  * Clear display of the winning voucher code (e.g., `EXPO-WIN-7281`).
-  * One-tap **"Copy Voucher"** button.
-  * One-tap **"Claim on Pathixo.com"** deep link redirecting directly to the product checkout/registration with coupon auto-applied.
-
-### 4.4 Fraud Mitigation & Duplicate Prevention
-* **Single Spin Rule:** Users should not be able to spam the wheel to cycle through prizes.
-* **Local Fingerprinting:** Store completion status and lead ID in `localStorage` and `sessionStorage`.
-* **Lead Deduplication:** Backend / database unique constraint on `phone` and `email` for the current event campaign ID. If a user enters an existing phone number, offer a gentle prompt: *"Looks like you've already spun! Here is your saved reward."*
-
----
-
-## 5. Data Capture Schema & Integrations
-
-### 5.1 Lead Object Schema
-```json
-{
-  "lead_id": "uuid-v4",
-  "full_name": "Alex Doe",
-  "email": "alex.doe@example.com",
-  "phone": "+919876543210",
-  "campaign_source": "EXPO_NOV_2026",
-  "captured_at": "2026-11-27T17:30:00Z",
-  "prize_won": "Free 1-Month Premium Membership",
-  "voucher_code": "PATHIXO-MEM-992",
-  "device_info": {
-    "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS...)",
-    "screen_resolution": "390x844"
-  },
-  "utm_parameters": {
-    "source": "qr_banner_1",
-    "medium": "offline_qr",
-    "campaign": "pathixo_easy_access"
-  },
-  "sync_status": "synced"
-}
-```
-
-### 5.2 Storage & Transmission Pipeline
-* **Primary Target:** Cloud database (Supabase, Firebase Firestore, or Pathixo REST API endpoint).
-* **Offline / Low-Signal Resilience (IndexedDB Queue):** If the user's connection drops right when submitting, the form data is saved into local `IndexedDB` and queued for retry as soon as network ping succeeds.
-* **Instant Notification Dispatch (Optional):**
-  * WhatsApp Business API or SMS gateway (e.g., Twilio, Gupshup) sending the voucher code directly to the attendee's phone.
-  * Automated welcome email sent to the participant's inbox.
+* **Client-Side Wheel UI:**
+  * 8-segment circular wheel styled in Pathixo's cyber aesthetic.
+  * Natural deceleration physics (`cubic-bezier(0.15, 0.9, 0.2, 1.0)`) with haptic/sound feedback.
+* **Prize Tiers & Reward Catalog:**
+  * `10% Off Pathixo Engineering Services`
+  * `20% Off Vakxo Pro Dev Pass`
+  * `1-Month Free Vakxo Autonomous Dev Trial`
+  * `krocPDF Pro Lifetime Voucher`
+  * `Pathixo Tech Swag & Sticker Pack`
+  * `Exclusive Expo Clearance Pass`
+* **Zero Client-Side Luck Calculation:**
+  * The frontend **never** decides the prize.
+  * The client triggers `POST /api/spin` with an idempotency key.
+  * The server runs PostgreSQL `spin_wheel()` in an ACID transaction:
+    * Verifies visitor hasn't spun yet.
+    * Selects an active reward from the weighted drop pool.
+    * Atomically decrements `remaining_quantity` (guaranteed non-negative via CHECK constraint).
+    * Generates a cryptographic voucher code.
+    * Returns the exact sector angle for the client wheel to land on.
+* **Winner Celebration:**
+  * Full-screen celebratory canvas confetti.
+  * Voucher code card with 1-tap clipboard copy and direct redemption deep-links.
 
 ---
 
-## 6. On-Ground Clearance, QA & Audit Protocol
-
-To guarantee zero breakdowns during live expo hours, the application must pass this clearance protocol before field deployment:
-
-### 6.1 Performance & Delivery Budgets
-* **First Contentful Paint (FCP):** < 1.2 seconds on 3G network simulation.
-* **Total JavaScript Bundle Size:** < 120 KB gzipped.
-* **Image Assets:** WebP/AVIF format, fully compressed, SVGs for icons and logos.
-* **No Blocking External Fonts:** Use system font fallbacks or preloaded subset fonts to eliminate font-swap flashing.
-
-### 6.2 Browser & Environment Clearance Matrix
-| Client / Engine | Environment | Verification Checklist |
-| :--- | :--- | :--- |
-| **iOS Safari** | iOS 16, 17, 18+ | 100vh viewport bug check (address bar expansion), bottom bar tap collision. |
-| **Android Chrome** | Android 12 to 15 | Back-button navigation behavior, virtual keyboard input overlap. |
-| **Instagram In-App Browser** | iOS & Android | Modal pop-up rendering, clipboard copy permissions. |
-| **WhatsApp In-App Browser** | iOS & Android | External link opening, URL parameter preservation. |
-| **Google Lens / Native Camera** | Stock Android & iOS | Direct QR scan trigger, instant deep URL resolution. |
-
-### 6.3 Physical QR Code Specifications
-* **QR Error Correction Level:** Set to **Level H (High)** (allows up to 30% damage/distortion without read failure).
-* **Contrast:** Dark QR code on clean white backing; avoid glossy laminates that create harsh glare under expo spotlights.
-* **URL Structure with UTM Tracking:**
-  `https://easy.pathixo.com/?utm_source=expo_stall&utm_medium=qr&utm_campaign=launch_2026`
-
----
-
-## 7. Recommended Technical Stack (Reference for Dev Team)
-
-* **Frontend Framework:** Next.js (App Router) or Vite + React / Svelte (lightweight static build).
-* **Styling Engine:** Tailwind CSS (utility-first, zero runtime CSS overhead).
-* **Animations:** Canvas-Confetti (lightweight canvas), CSS transforms for wheel spinning, Lucide Icons.
-* **Form Handling & Validation:** Zod or lightweight regex validator.
-* **State & Persistence:** LocalStorage + lightweight API client with retry mechanism.
-
----
-
-## 8. Directory & Component Structure Blueprint
+## 5. Component Tree & File Map
 
 ```
-pathixo-easy-access/
-├── product.md                     # This master document
-├── README.md                      # Quickstart and developer setup
+Pathixo-Easy-Access/
+├── product.md                                 # Master Product Omnibook (this file)
+├── AGENTS.md                                  # Autonomous Engineering Team Rules
+├── GEMINI.md                                  # Gemini Agent Context & Quick Reference
+├── docs/                                      # Complete Documentation Suite
+│   ├── MASTER_SPEC.md                         # Detailed Technical Specification
+│   ├── ARCHITECTURE.md                        # Architectural Diagrams & Flowcharts
+│   ├── API.md                                 # REST Endpoints Contract
+│   ├── DATABASE.md                            # Schema & Stored Procedure Reference
+│   ├── DEPLOYMENT.md                          # Production Vercel & Domain Runbook
+│   ├── RUNBOOK.md                             # Event-Day On-Ground Operator Guide
+│   ├── SECURITY.md                            # Security Matrix & Threat Mitigations
+│   ├── STATUS.md                              # Live Execution Status
+│   └── PLAN.md                                # Phased Implementation Plan
 ├── public/
-│   ├── assets/
-│   │   ├── pathixo-logo.svg       # Crisp brand logo
-│   │   ├── wheel-pointer.svg      # Indicator needle for spin wheel
-│   │   └── favicon.ico
-│   └── sounds/
-│       └── tick.mp3               # Audio micro-interaction (optional)
+│   └── assets/qr/
+│       ├── pathixo-expo-qr.svg                # Master Vector QR for Banners
+│       ├── pathixo-expo-qr.png                # 2000x2000 High-DPI Print QR
+│       └── pathixo-expo-qr-dark.png           # Dark Variant QR
 ├── src/
+│   ├── app/
+│   │   ├── page.tsx                           # Root Landing Page
+│   │   ├── spin/page.tsx                      # Dedicated Spin & Win Page
+│   │   ├── admin/                             # Private Admin Portal
+│   │   └── api/                               # Server Route Handlers
 │   ├── components/
-│   │   ├── Header.tsx             # Pathixo brand header & banner
-│   │   ├── ActionLinks.tsx        # High-visibility quick access buttons
-│   │   ├── LeadModal.tsx          # Name/Email/Phone capture modal
-│   │   ├── SpinWheel.tsx          # Canvas/SVG gamified wheel
-│   │   ├── WinnerCard.tsx         # Voucher display & direct claim link
-│   │   └── Footer.tsx             # Social links & copyright
-│   ├── lib/
-│   │   ├── api.ts                 # API submission & error recovery
-│   │   ├── storage.ts             # LocalStorage & deduplication helpers
-│   │   └── validation.ts          # Input sanity checks (phone/email)
-│   ├── pages/ or app/
-│   │   └── page.tsx               # Primary mobile entry view
-│   └── styles/
-│       └── globals.css
-└── package.json
+│   │   ├── public/
+│   │   │   ├── CyberPortal.tsx                # Dual-Responsive Event Portal
+│   │   │   ├── FloatingSpinBot.tsx            # Draggable Spin Lucky Draw Widget
+│   │   │   ├── Hero.tsx                       # Event Headline & Quick CTAs
+│   │   │   ├── ProductShowcase.tsx            # Vakxo & krocPDF Product Cards
+│   │   │   ├── ServicesGrid.tsx               # Pathixo Engineering Capabilities
+│   │   │   ├── RegistrationForm.tsx           # Lead Capture Input Form
+│   │   │   ├── SpinWheel.tsx                  # Interactive Animated Wheel
+│   │   │   └── VisitorPassModal.tsx           # Auto-Opening Digital Pass Gate
+│   │   └── admin/
+│   │       ├── StallRedemptionTool.tsx        # Booth Staff Voucher Scanner
+│   │       └── InquiryStatusSelector.tsx      # Leads Pipeline Tracker
+│   └── config/
+│       └── site.ts                            # Single Source of Truth for Identity & URLs
+└── supabase/
+    └── migrations/
+        ├── 20260101000000_init_schema.sql     # Database Schema & RLS Policies
+        └── 20260101000001_spin_function.sql   # Atomic spin_wheel RPC
 ```
 
 ---
 
-## 9. AI Agent & Developer Instructions
+## 6. On-Ground Expo Clearance Checklist
 
-When working on this repository, any assisting AI agent or engineer must adhere to the following rules:
-
-1. **Mobile Experience is Sacred:** Never design desktop-first with responsive mobile afterthought. All UI decisions, touch targets, and typography must be sized for mobile screens (360px–414px baseline).
-2. **Prioritize Conversion over Complexity:** The lead capture and spin-to-win funnel is the business priority. Never introduce friction (e.g., OTP login, complex passwords, multi-step questionnaires).
-3. **Fail-Safe Data Preservation:** Never lose a lead due to network hiccups. All form entries must be preserved locally before network dispatch.
-4. **Performance Integrity:** Keep third-party npm packages to an absolute minimum to prevent slow load times on expo cellular networks.
+Before live booth opening, verify:
+- [x] **Zero Build Errors:** `npm run build && npm run lint && npm run typecheck` passing.
+- [x] **QR Scan Resolution:** `public/assets/qr/pathixo-expo-qr.svg` points to `https://expo.pathixo.com` with proper UTM parameters (`?utm_source=qr_booth&utm_medium=banner&utm_campaign=meerut_trade_show_2026`).
+- [x] **Rate Limiting Active:** Upstash Redis prevents booth attendees or automated scripts from spamming registrations.
+- [x] **Bot Defense Active:** Cloudflare Turnstile validates human interaction without intrusive image captchas.
+- [x] **Database Isolation:** Supabase anon key cannot select or mutate `visitors`, `spins`, or `inquiries` directly.
+- [x] **Redemption Tool Ready:** Booth staff can access `/admin/lucky-draw` to verify and mark claimed vouchers in real time.
