@@ -16,6 +16,16 @@ export function middleware(req: NextRequest) {
       return res;
     }
 
+    // Allow local dev access when Supabase is not yet configured
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const isDevNoSupabase =
+      process.env.NODE_ENV !== "production" &&
+      (!supabaseUrl || supabaseUrl.includes("your-project") || !supabaseUrl.startsWith("http"));
+
+    if (isDevNoSupabase) {
+      return res;
+    }
+
     // Check for Supabase session cookies (sb-*-auth-token)
     const allCookies = req.cookies.getAll();
     const hasAuthCookie = allCookies.some(

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUtm } from "@/lib/hooks/useUtm";
 import { X, Sparkles, CheckCircle2, AlertCircle, Loader2, ExternalLink, ArrowRight } from "lucide-react";
+import { TurnstileWidget } from "./TurnstileWidget";
 
 export interface VisitorPassModalProps {
   isOpen: boolean;
@@ -34,7 +35,12 @@ export function VisitorPassModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [registeredName, setRegisteredName] = useState("");
+  const [existingVoucherCode, setExistingVoucherCode] = useState<string | null>(null);
+  const [existingPrizeName, setExistingPrizeName] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string>(
+    process.env.NODE_ENV !== "production" ? "1x00000000000000000000AA" : ""
+  );
 
   const {
     register,
@@ -43,7 +49,7 @@ export function VisitorPassModal({
     formState: { errors },
   } = useForm<FormInputs>({
     defaultValues: {
-      privacy_consent: true,
+      privacy_consent: false,
       interested_product: targetDestination.name.toLowerCase().includes("vakxo")
         ? "vakxo"
         : targetDestination.name.toLowerCase().includes("kroc")
@@ -53,13 +59,18 @@ export function VisitorPassModal({
   });
 
   const onSubmit = async (values: FormInputs) => {
+    if (!turnstileToken) {
+      setErrorMessage("Please complete the security challenge before proceeding.");
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMessage(null);
 
     try {
       const payload = {
         ...values,
-        turnstile_token: "1x00000000000000000000AA", // Standard local/expo fallback token
+        turnstile_token: turnstileToken,
         utm_source: utm.utm_source || "meerut_trade_show",
         utm_medium: utm.utm_medium || "qr_kiosk",
         utm_campaign: utm.utm_campaign || "expo_2026",
@@ -76,18 +87,16 @@ export function VisitorPassModal({
       const data = await res.json();
 
       if (!res.ok || !data.ok) {
-        if (res.status === 409 || data?.error?.code === "DUPLICATE_REGISTRATION") {
-          // Already registered visitor - treat as verified and unlock pass directly
-          setRegisteredName(values.full_name || "Valued Visitor");
-          setIsSuccess(true);
-          return;
-        }
-
         setErrorMessage(data?.error?.message || "Registration failed. Please check your details.");
         return;
       }
 
-      setRegisteredName(values.full_name);
+      if (data.data?.already_spun && data.data?.spin) {
+        setExistingVoucherCode(data.data.spin.reward_code);
+        setExistingPrizeName(data.data.spin.reward_name);
+      }
+
+      setRegisteredName(data.data?.full_name || values.full_name);
       setIsSuccess(true);
     } catch {
       setErrorMessage("Network error. Please try again.");
@@ -136,7 +145,7 @@ export function VisitorPassModal({
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-[#ccff00] animate-pulse" />
                 <span className="font-mono text-[11px] font-semibold tracking-wider text-[#ccff00] uppercase">
-                  // MEERUT TRADE SHOW • DIGITAL VISITOR PASS
+                  {"// MEERUT TRADE SHOW • DIGITAL VISITOR PASS"}
                 </span>
               </div>
               <button
@@ -262,8 +271,7 @@ export function VisitorPassModal({
                   <label className="flex items-start gap-2.5 cursor-pointer pt-1">
                     <input
                       type="checkbox"
-                      {...register("privacy_consent", { required: true })}
-                      defaultChecked
+                      {...register("privacy_consent", { required: "Please accept the Privacy Policy to continue." })}
                       className="mt-0.5 h-4 w-4 rounded border-neutral-700 bg-neutral-900 text-[#ccff00] accent-[#ccff00] focus:ring-0"
                     />
                     <span className="font-mono text-[11px] text-neutral-400 leading-tight">
@@ -278,6 +286,14 @@ export function VisitorPassModal({
                       .
                     </span>
                   </label>
+                  {errors.privacy_consent && (
+                    <p className="font-mono text-[11px] text-red-400">
+                      {errors.privacy_consent.message}
+                    </p>
+                  )}
+
+                  {/* Cloudflare Turnstile */}
+                  <TurnstileWidget onVerify={setTurnstileToken} className="pt-1" />
 
                   {/* Big Cyber Submit Button */}
                   <button
@@ -308,7 +324,7 @@ export function VisitorPassModal({
 
                 <div className="mt-4">
                   <span className="inline-block rounded-full bg-[#ccff00]/10 border border-[#ccff00]/30 px-3 py-1 font-mono text-[11px] font-bold text-[#ccff00] uppercase">
-                    // ACCESS PASS GRANTED
+                    {"// ACCESS PASS GRANTED"}
                   </span>
                   <h3 className="mt-2 text-2xl font-black uppercase tracking-tight text-white">
                     WELCOME, {registeredName}!
@@ -316,6 +332,17 @@ export function VisitorPassModal({
                   <p className="mt-1 font-mono text-xs text-neutral-400">
                     Your visitor credentials have been verified at Meerut Trade Show.
                   </p>
+
+                  {existingVoucherCode && (
+                    <div className="mt-4 rounded-xl border border-dashed border-[#ccff00]/50 bg-[#141619] p-3 text-center">
+                      <span className="font-mono text-[10px] uppercase text-neutral-400 block">
+                        SAVED LUCKY DRAW REWARD: {existingPrizeName}
+                      </span>
+                      <span className="mt-1 inline-block font-mono text-lg font-black tracking-widest text-[#ccff00]">
+                        {existingVoucherCode}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Primary Destination Action */}

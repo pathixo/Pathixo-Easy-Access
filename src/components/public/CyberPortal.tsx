@@ -83,7 +83,7 @@ export function CyberPortal() {
           >
             {/* Terminal Monospace Pre-heading */}
             <div className="inline-block font-mono text-[11px] font-semibold tracking-wide text-[#ccff00] uppercase mb-1">
-              // WELCOME TO PATHIXO LIVE BOOTH
+              {"// WELCOME TO PATHIXO LIVE BOOTH"}
             </div>
 
             {/* Big Impact Headline */}
@@ -109,7 +109,7 @@ export function CyberPortal() {
         <section className="mt-6 space-y-3.5">
           <div className="flex items-center justify-between">
             <span className="font-mono text-[11px] font-bold tracking-widest text-neutral-400 uppercase">
-              // HIGHLIGHTED PLATFORMS
+              {"// HIGHLIGHTED PLATFORMS"}
             </span>
             <span className="font-mono text-[10px] text-[#ccff00] uppercase">
               TAP TO UNLOCK ACCESS
@@ -246,7 +246,7 @@ export function CyberPortal() {
         {/* BIG CHUNKY SOCIAL PLATFORM BUTTONS */}
         <section className="mt-6">
           <div className="font-mono text-[11px] font-bold tracking-widest text-neutral-400 uppercase mb-3">
-            // CONNECT ON SOCIAL
+            {"// CONNECT ON SOCIAL"}
           </div>
 
           <div className="space-y-2.5">

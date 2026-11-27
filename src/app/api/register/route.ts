@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
-import { getAdminClient } from "@/lib/supabase/admin";
+import crypto from "crypto";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { getDevStore } from "@/lib/dev-store";
 import { registerSchema } from "@/lib/validation";
 import { registerRateLimiter, getClientIp } from "@/lib/security/rate-limit";
 import { verifyTurnstileToken } from "@/lib/security/turnstile";
@@ -48,7 +50,55 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 4. Insert into database
+    // 4. Local Dev Mode Fallback when Supabase is not yet configured
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      const store = getDevStore();
+      const existing = store.visitors.find(
+        (v) => v.mobile === data.mobile || v.email.toLowerCase() === data.email.toLowerCase()
+      );
+
+      if (existing) {
+        await setVisitorSessionCookie(existing.id);
+        const existingSpin = store.spins.find((s) => s.visitor_id === existing.id);
+        if (existingSpin) {
+          const rew = store.rewards.find((r) => r.id === existingSpin.reward_id);
+          return apiSuccess({
+            registered: true,
+            already_registered: true,
+            already_spun: true,
+            full_name: existing.full_name,
+            spin: {
+              reward_code: existingSpin.reward_code,
+              reward_name: rew?.name || existingSpin.prize_label,
+              reward_slug: rew?.slug || "vip-expo-pass",
+              reward_description: rew?.description || "Exhibition Lucky Draw Voucher",
+              redemption_instructions: rew?.redemption_instructions || "Show this code to our stall team.",
+              expires_at: existingSpin.expires_at,
+              fulfillment_status: existingSpin.fulfillment_status,
+            },
+          });
+        }
+        return apiSuccess({
+          registered: true,
+          already_registered: true,
+          already_spun: false,
+          full_name: existing.full_name,
+        });
+      }
+
+      const newId = crypto.randomUUID();
+      store.visitors.unshift({
+        id: newId,
+        full_name: data.full_name,
+        email: data.email,
+        mobile: data.mobile,
+        created_at: new Date().toISOString(),
+      });
+      await setVisitorSessionCookie(newId);
+      return apiSuccess({ registered: true });
+    }
+
+    // 5. Insert into database
     const supabase = getAdminClient();
     const campaignId = process.env.CAMPAIGN_ID || "expo_mart_2026";
     const now = new Date().toISOString();
@@ -79,8 +129,55 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      // Duplicate entry detection (PostgreSQL 23505 unique_violation)
+      // Duplicate entry detection: Returning visitor flow
       if (error.code === "23505") {
+        try {
+          const { data: existingVisitor } = await supabase
+            .from("visitors")
+            .select("id, full_name, mobile, email")
+            .or(`mobile.eq.${data.mobile},email.ilike.${data.email}`)
+            .limit(1)
+            .maybeSingle();
+
+          if (existingVisitor) {
+            await setVisitorSessionCookie(existingVisitor.id);
+
+            const { data: existingSpin } = await supabase
+              .from("spins")
+              .select("id, reward_code, expires_at, redemption_status, fulfillment_status, email_status, rewards(name, slug, description, redemption_instructions)")
+              .eq("visitor_id", existingVisitor.id)
+              .maybeSingle();
+
+            if (existingSpin) {
+              const r = Array.isArray(existingSpin.rewards) ? existingSpin.rewards[0] : existingSpin.rewards;
+              return apiSuccess({
+                registered: true,
+                already_registered: true,
+                already_spun: true,
+                full_name: existingVisitor.full_name,
+                spin: {
+                  reward_code: existingSpin.reward_code,
+                  reward_name: r?.name || "Exhibition Voucher",
+                  reward_slug: r?.slug || "vip-expo-pass",
+                  reward_description: r?.description || "Exhibition Lucky Draw Voucher",
+                  redemption_instructions: r?.redemption_instructions || "Show this code to our stall team.",
+                  expires_at: existingSpin.expires_at,
+                  fulfillment_status: existingSpin.fulfillment_status,
+                },
+              });
+            }
+
+            return apiSuccess({
+              registered: true,
+              already_registered: true,
+              already_spun: false,
+              full_name: existingVisitor.full_name,
+            });
+          }
+        } catch (lookupErr) {
+          console.error("Existing visitor lookup failed:", lookupErr);
+        }
+
         return apiError(
           "DUPLICATE_REGISTRATION",
           "This phone number or email address has already been registered. Please visit our stall team if you need assistance.",

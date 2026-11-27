@@ -3,10 +3,27 @@
 import { useState } from "react";
 import { Search, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
+interface RedemptionResult {
+  redeemed: boolean;
+  redeemed_at: string;
+  visitor?: {
+    full_name: string;
+    email: string;
+    mobile: string;
+    company?: string | null;
+  } | null;
+  reward?: {
+    name: string;
+    slug: string;
+    reward_type: string;
+    redemption_instructions: string;
+  } | null;
+}
+
 export function StallRedemptionTool() {
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<RedemptionResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleRedeem = async (e: React.FormEvent) => {

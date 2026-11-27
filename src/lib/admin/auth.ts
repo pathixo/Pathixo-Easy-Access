@@ -1,6 +1,6 @@
 import "server-only";
 import { createAdminServerClient } from "./server-client";
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
 
 export type AdminRole = "super_admin" | "admin" | "viewer";
 
@@ -16,6 +16,15 @@ export interface AdminProfile {
  */
 export async function getAdminSession(): Promise<AdminProfile | null> {
   try {
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      return {
+        id: "dev-admin-local",
+        email: "saxenaayush2809@gmail.com",
+        role: "super_admin",
+        full_name: "Ayush Saxena (Local Dev)",
+      };
+    }
+
     const supabase = createAdminServerClient();
     const {
       data: { user },
@@ -80,6 +89,10 @@ export async function logAuditEvent(
   ipAddress?: string | null
 ): Promise<void> {
   try {
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      return;
+    }
+
     const serviceClient = getAdminClient();
     await serviceClient.from("audit_logs").insert({
       admin_id: adminId,

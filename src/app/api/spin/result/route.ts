@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { getDevStore } from "@/lib/dev-store";
 import { getVisitorSession } from "@/lib/security/session";
 import { apiError, apiSuccess } from "@/lib/security/errors";
 
@@ -17,7 +18,27 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 2. Fetch existing spin for this visitor
+    // 2. Local Dev Mode Fallback when Supabase is not configured
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      const store = getDevStore();
+      const spin = store.spins.find((s) => s.visitor_id === session.visitorId);
+      if (!spin) {
+        return apiError("NO_SPIN_FOUND", "No lucky draw participation record found for this session.", 404);
+      }
+      const rew = store.rewards.find((r) => r.id === spin.reward_id);
+      return apiSuccess({
+        spin_id: spin.id,
+        reward_code: spin.reward_code,
+        redemption_status: spin.redemption_status,
+        email_status: spin.email_status,
+        fulfillment_status: spin.fulfillment_status,
+        expires_at: spin.expires_at,
+        created_at: spin.created_at,
+        reward: rew || null,
+      });
+    }
+
+    // 3. Fetch existing spin for this visitor
     const supabase = getAdminClient();
     const { data, error } = await supabase
       .from("spins")
