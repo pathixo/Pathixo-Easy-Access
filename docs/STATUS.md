@@ -32,9 +32,5 @@
 ---
 
 ## ⚠️ Known Issues / Open Items
-- **#5 (High, security)**: Hardcoded super-admin credentials and default `SESSION_SECRET` fallback remain in code until product auth decision is finalized. Do not treat current built-in creds as production-safe.
-- **#6 (High, frontend)**: Fixed in working tree pending commit - VisitorPassModal Turnstile reset on retry.
-- **#7 (Medium, backend/admin)**: Fixed in working tree pending commit - redeem endpoint now sets `fulfillment_status` and uses atomic redemption guard.
-- **#8 (Medium, backend)**: Fixed in working tree pending commit - dev-no-supabase guards added for `/api/events` and `/api/inquiry`.
-- **#9 (Medium, security/admin)**: Fixed in working tree pending commit - rewards page/API restricted to `super_admin`.
-- Real Supabase + real Turnstile + email delivery still require production env configuration and verification.
+- **#5 (High, security)**: Hardcoded super-admin fallback credentials and default `SESSION_SECRET` fallback are in place for local testing/dev. Ensure production environment variables (`ADMIN_LOGIN_USERNAME`, `ADMIN_LOGIN_PASSWORD`, `SESSION_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`) are set before deployment.
+- Real Supabase + real Cloudflare Turnstile + email delivery require production environment variables configured on Vercel per `docs/DEPLOYMENT.md`.
