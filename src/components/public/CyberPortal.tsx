@@ -52,17 +52,6 @@ export function CyberPortal() {
                 </span>
               </div>
             </div>
-
-            {/* Live Exhibition Status Badge */}
-            <div className="flex items-center gap-2 rounded-full border border-[#ccff00]/30 bg-[#ccff00]/10 px-3.5 py-1">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ccff00] opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#ccff00]" />
-              </span>
-              <span className="font-mono text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#ccff00]">
-                PATHIXO EXPO 2026
-              </span>
-            </div>
           </div>
         </header>
 

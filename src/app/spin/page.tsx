@@ -25,13 +25,6 @@ export default function SpinPage() {
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Back</span>
           </Link>
-
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#ccff00]/30 bg-[#ccff00]/10 px-3 py-1">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-[#ccff00]" />
-            <span className="font-mono text-[10px] font-bold tracking-wider text-[#ccff00] uppercase">
-              PATHIXO EXPO 2026
-            </span>
-          </div>
         </div>
       </header>
 
