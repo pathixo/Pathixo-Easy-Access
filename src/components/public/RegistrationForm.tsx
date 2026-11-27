@@ -201,8 +201,8 @@ export function RegistrationForm() {
                     className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-[#16161f] px-3.5 text-sm text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   >
                     <option value="all">General Exploration / All Offerings</option>
-                    <option value="vakxo">Vakxo (AI Workspace Platform)</option>
-                    <option value="crock-pdf">Crock PDF (Document Intelligence)</option>
+                    <option value="vakxo">Vakxo (Voice-Native Dev Agent)</option>
+                    <option value="kroc-pdf">krocPDF (Enterprise Document AI)</option>
                     <option value="custom-engineering">Custom Software & AI Development</option>
                   </select>
                 </div>

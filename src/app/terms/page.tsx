@@ -80,7 +80,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-base font-bold text-white">4. Intellectual Property</h2>
             <p className="mt-2">
-              All product names, logos, concepts, software designs, and proprietary trademarks including Vakxo, Crock PDF, and Pathixo are the exclusive intellectual property of {siteConfig.company.legalName}.
+              All product names, logos, concepts, software designs, and proprietary trademarks including Vakxo, krocPDF, and Pathixo are the exclusive intellectual property of {siteConfig.company.legalName}.
             </p>
           </section>
 

@@ -91,7 +91,7 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
           >
             <option value="all">All Products</option>
             <option value="vakxo">Vakxo</option>
-            <option value="crock-pdf">Crock PDF</option>
+            <option value="kroc-pdf">krocPDF</option>
             <option value="custom-engineering">Custom Engineering</option>
           </select>
 
