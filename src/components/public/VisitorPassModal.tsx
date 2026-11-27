@@ -5,12 +5,13 @@ import { useForm } from "react-hook-form";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUtm } from "@/lib/hooks/useUtm";
-import { X, Sparkles, CheckCircle2, AlertCircle, Loader2, ExternalLink, ArrowRight } from "lucide-react";
+import { X, Sparkles, CheckCircle2, AlertCircle, Loader2, ArrowRight, ShieldCheck } from "lucide-react";
 
 export interface VisitorPassModalProps {
   isOpen: boolean;
   onClose: () => void;
-  targetDestination: {
+  onRegisterSuccess?: (name: string) => void;
+  targetDestination?: {
     name: string;
     url: string;
     category?: string;
@@ -28,6 +29,7 @@ interface FormInputs {
 export function VisitorPassModal({
   isOpen,
   onClose,
+  onRegisterSuccess,
   targetDestination,
 }: VisitorPassModalProps) {
   const utm = useUtm();
@@ -35,6 +37,12 @@ export function VisitorPassModal({
   const [isSuccess, setIsSuccess] = useState(false);
   const [registeredName, setRegisteredName] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const defaultProduct = targetDestination?.name?.toLowerCase().includes("vakxo")
+    ? "vakxo"
+    : targetDestination?.name?.toLowerCase().includes("kroc")
+    ? "kroc-pdf"
+    : "all";
 
   const {
     register,
@@ -44,11 +52,7 @@ export function VisitorPassModal({
   } = useForm<FormInputs>({
     defaultValues: {
       privacy_consent: true,
-      interested_product: targetDestination.name.toLowerCase().includes("vakxo")
-        ? "vakxo"
-        : targetDestination.name.toLowerCase().includes("kroc")
-        ? "kroc-pdf"
-        : "all",
+      interested_product: defaultProduct,
     },
   });
 
@@ -77,9 +81,27 @@ export function VisitorPassModal({
 
       if (!res.ok || !data.ok) {
         if (res.status === 409 || data?.error?.code === "DUPLICATE_REGISTRATION") {
-          // Already registered visitor - treat as verified and unlock pass directly
-          setRegisteredName(values.full_name || "Valued Visitor");
-          setIsSuccess(true);
+          // Check if an existing valid session cookie is active
+          try {
+            const checkSession = await fetch("/api/spin/result");
+            if (checkSession.status !== 401) {
+              // Valid session cookie is present, preserve success behavior
+              const name = values.full_name || "Valued Visitor";
+              setRegisteredName(name);
+              setIsSuccess(true);
+              try {
+                localStorage.setItem("px_visitor_registered", "true");
+                localStorage.setItem("px_visitor_name", name);
+              } catch {}
+              onRegisterSuccess?.(name);
+              return;
+            }
+          } catch {}
+
+          setErrorMessage(
+            data?.error?.message ||
+              "This phone number or email is already registered. Please visit our stall team for lucky draw assistance."
+          );
           return;
         }
 
@@ -87,8 +109,14 @@ export function VisitorPassModal({
         return;
       }
 
-      setRegisteredName(values.full_name);
+      const name = values.full_name;
+      setRegisteredName(name);
       setIsSuccess(true);
+      try {
+        localStorage.setItem("px_visitor_registered", "true");
+        localStorage.setItem("px_visitor_name", name);
+      } catch {}
+      onRegisterSuccess?.(name);
     } catch {
       setErrorMessage("Network error. Please try again.");
     } finally {
@@ -96,14 +124,15 @@ export function VisitorPassModal({
     }
   };
 
-  const handleOpenDestination = () => {
-    if (targetDestination.url) {
+  const handleFinish = () => {
+    if (targetDestination?.url) {
       window.open(targetDestination.url, "_blank", "noopener,noreferrer");
     }
+    setIsSuccess(false);
     onClose();
   };
 
-  const handleResetModal = () => {
+  const handleDismiss = () => {
     setIsSuccess(false);
     setErrorMessage(null);
     reset();
@@ -119,8 +148,8 @@ export function VisitorPassModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={handleResetModal}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={handleDismiss}
+            className="fixed inset-0 bg-black/85 backdrop-blur-md"
           />
 
           {/* Modal / Cyber Sheet */}
@@ -129,19 +158,19 @@ export function VisitorPassModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 60, scale: 0.96 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-lg rounded-t-3xl sm:rounded-2xl border-2 border-[#ccff00] bg-[#0c0d0e] p-6 text-white shadow-[0px_0px_30px_rgba(204,255,0,0.15)] z-10 max-h-[92vh] overflow-y-auto"
+            className="relative w-full max-w-lg rounded-t-3xl sm:rounded-2xl border-2 border-[#ccff00] bg-[#0c0d0e] p-6 text-white shadow-[0px_0px_35px_rgba(204,255,0,0.2)] z-10 max-h-[92vh] overflow-y-auto"
           >
             {/* Header Badge */}
             <div className="flex items-center justify-between pb-3 border-b border-[#252a31]">
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-[#ccff00] animate-pulse" />
                 <span className="font-mono text-[11px] font-semibold tracking-wider text-[#ccff00] uppercase">
-                  // MEERUT TRADE SHOW • DIGITAL VISITOR PASS
+                  {"// MEERUT TRADE SHOW • VISITOR CHECK-IN"}
                 </span>
               </div>
               <button
                 type="button"
-                onClick={handleResetModal}
+                onClick={handleDismiss}
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900 text-neutral-400 hover:text-white hover:border-[#ccff00] transition"
               >
                 <X className="h-4 w-4" />
@@ -150,12 +179,12 @@ export function VisitorPassModal({
 
             {!isSuccess ? (
               <div className="mt-4">
-                <div className="mb-5">
-                  <h3 className="text-xl font-black uppercase tracking-tight text-white sm:text-2xl">
-                    UNLOCK {targetDestination.name}
+                <div className="mb-5 text-center sm:text-left">
+                  <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white">
+                    GET YOUR VISITOR PASS
                   </h3>
                   <p className="mt-1 font-mono text-xs text-neutral-400">
-                    Quick 15-second pass registration for live booth visitors at Meerut Trade Show.
+                    Register once in 15 seconds to unlock direct access to our platforms, products, and stall lucky draw perks.
                   </p>
                 </div>
 
@@ -292,7 +321,7 @@ export function VisitorPassModal({
                       </>
                     ) : (
                       <>
-                        <span>CLAIM PASS & CONTINUE</span>
+                        <span>CLAIM PASS & UNLOCK ALL ↗</span>
                         <ArrowRight className="h-4 w-4 stroke-[3]" />
                       </>
                     )}
@@ -308,13 +337,13 @@ export function VisitorPassModal({
 
                 <div className="mt-4">
                   <span className="inline-block rounded-full bg-[#ccff00]/10 border border-[#ccff00]/30 px-3 py-1 font-mono text-[11px] font-bold text-[#ccff00] uppercase">
-                    // ACCESS PASS GRANTED
+                    {"// VISITOR PASS VERIFIED"}
                   </span>
                   <h3 className="mt-2 text-2xl font-black uppercase tracking-tight text-white">
                     WELCOME, {registeredName}!
                   </h3>
                   <p className="mt-1 font-mono text-xs text-neutral-400">
-                    Your visitor credentials have been verified at Meerut Trade Show.
+                    All Pathixo platforms and stall privileges are now unlocked for you.
                   </p>
                 </div>
 
@@ -322,11 +351,11 @@ export function VisitorPassModal({
                 <div className="mt-6 space-y-3">
                   <button
                     type="button"
-                    onClick={handleOpenDestination}
+                    onClick={handleFinish}
                     className="flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] font-mono text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition"
                   >
-                    <span>OPEN {targetDestination.name}</span>
-                    <ExternalLink className="h-4 w-4 stroke-[2.5]" />
+                    <ShieldCheck className="h-5 w-5 stroke-[2.5]" />
+                    <span>EXPLORE PATHIXO HUB ↗</span>
                   </button>
 
                   {/* Lucky Draw Turn Button */}

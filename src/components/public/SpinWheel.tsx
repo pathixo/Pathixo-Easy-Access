@@ -44,6 +44,10 @@ export function SpinWheel() {
       try {
         const res = await fetch("/api/spin/result");
         if (res.status === 401) {
+          try {
+            localStorage.removeItem("px_visitor_registered");
+            localStorage.removeItem("px_visitor_name");
+          } catch {}
           setUnauthorized(true);
           return;
         }
@@ -97,6 +101,10 @@ export function SpinWheel() {
       });
 
       if (res.status === 401) {
+        try {
+          localStorage.removeItem("px_visitor_registered");
+          localStorage.removeItem("px_visitor_name");
+        } catch {}
         setUnauthorized(true);
         setIsSpinning(false);
         return;
@@ -173,7 +181,7 @@ export function SpinWheel() {
           The Lucky Draw is exclusively available to verified exhibition attendees. Please register your visit to unlock your spin.
         </p>
         <Link
-          href="/#register"
+          href="/?register=true"
           className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 font-semibold text-xs text-white transition hover:bg-brand-500"
         >
           <span>Register Now</span>
