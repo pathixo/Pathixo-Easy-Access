@@ -102,10 +102,10 @@ VALUES
   'Apply this voucher code at checkout on vakxo.com or show it to our booth team.'
 ),
 (
-  'discount-20-dev',
-  '20% Off Custom Engineering Milestone',
-  '20% Dev',
-  '20% credit applied to the first sprint of custom AI or software engineering with Pathixo.',
+  'discount-20-vakxo',
+  '20% Off Vakxo Pro Subscription',
+  '20% Vakxo',
+  '20% discount voucher applied to Vakxo Pro monthly or annual developer license.',
   'discount',
   0,
   0,
@@ -114,13 +114,13 @@ VALUES
   15,
   true,
   60,
-  'Mention this voucher code during your project kickoff call with Pathixo leadership.'
+  'Apply this voucher code at checkout on vakxo.com or show it to our booth team.'
 ),
 (
-  'discount-50-cloud',
-  '50% Off Cloud & DevOps Setup',
-  '50% Cloud',
-  '50% discount on initial cloud infrastructure, CI/CD pipeline automation, or Kubernetes setup.',
+  'discount-50-krocpdf',
+  '50% Off krocPDF Pro Access',
+  '50% kroc',
+  '50% discount on krocPDF Pro high-speed document intelligence and OCR suite.',
   'discount',
   0,
   0,
@@ -129,7 +129,7 @@ VALUES
   10,
   true,
   45,
-  'Show this code to our solutions architect to apply the 50% cloud discount.'
+  'Use this voucher code at checkout inside krocPDF to claim your 50% discount.'
 ),
 (
   'krocpdf-6-month',

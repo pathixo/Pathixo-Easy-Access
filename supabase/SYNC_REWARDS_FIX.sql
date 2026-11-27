@@ -1,11 +1,11 @@
 -- ==============================================================================
--- PATHIXO EXPO PLATFORM: IMMEDIATE SUPABASE REWARD SYNC & FIX
+-- PATHIXO EXPO PLATFORM: PURGE NON-PRODUCT REWARDS & SYNC VAKXO/KROCPDF ONLY
 -- Run this ENTIRE script in your Supabase SQL Editor (Dashboard -> SQL Editor -> New Query -> Run)
--- This replaces the old placeholder rewards ("Special Exhibition Thank-You Voucher", etc.)
--- with the 8 official live expo prizes.
+-- This permanently DELETES "thank-you-pass", "free-ai-consultation", "exclusive-merchandise",
+-- "credit-10k-cloud", dev/cloud service discounts, leaving ONLY 8 official Vakxo & krocPDF prizes.
 -- ==============================================================================
 
--- 1. Ensure required columns exist on rewards & spins tables
+-- 1. Ensure columns exist on rewards & spins
 ALTER TABLE public.rewards
   ADD COLUMN IF NOT EXISTS max_cap INT DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS claimed_count INT NOT NULL DEFAULT 0,
@@ -20,21 +20,36 @@ ALTER TABLE public.spins
   ADD COLUMN IF NOT EXISTS email_error TEXT,
   ADD COLUMN IF NOT EXISTS fulfillment_status TEXT NOT NULL DEFAULT 'unclaimed';
 
--- 2. Deactivate old placeholder rewards (including 'thank-you-pass', 'exclusive-merchandise', etc.)
-UPDATE public.rewards
-SET is_active = false
+-- 2. Clean up any previous test spins referencing non-Vakxo/non-krocPDF prizes
+DELETE FROM public.spins 
+WHERE reward_id IN (
+  SELECT id FROM public.rewards 
+  WHERE slug NOT IN (
+    'vakxo-1-year',
+    'vakxo-1-month',
+    'discount-30-vakxo',
+    'discount-20-vakxo',
+    'discount-50-krocpdf',
+    'krocpdf-6-month',
+    'extended-trial-3mo',
+    'vakxo-6-month'
+  )
+);
+
+-- 3. PERMANENTLY DELETE all obsolete rewards (thank you pass, consultations, merchandise, dev/cloud credits)
+DELETE FROM public.rewards 
 WHERE slug NOT IN (
   'vakxo-1-year',
   'vakxo-1-month',
   'discount-30-vakxo',
-  'discount-20-dev',
-  'discount-50-cloud',
+  'discount-20-vakxo',
+  'discount-50-krocpdf',
   'krocpdf-6-month',
   'extended-trial-3mo',
   'vakxo-6-month'
 );
 
--- 3. Upsert the 8 Official Wheel Rewards
+-- 4. Upsert the 8 Pure Vakxo & krocPDF Rewards
 INSERT INTO public.rewards (
   slug, name, display_label, description, reward_type, 
   total_inventory, remaining_inventory, max_cap, claimed_count, 
@@ -47,13 +62,7 @@ VALUES
   '1-Yr Vakxo',
   'Full 12-month access to Vakxo AI developer environment with unlimited voice actions and terminal automation.',
   'credit',
-  2,
-  2,
-  2,
-  0,
-  2,
-  true,
-  90,
+  2, 2, 2, 0, 2, true, 90,
   'Show this code at the booth or reply to your voucher confirmation email to activate your 1-Year Vakxo Pro license.'
 ),
 (
@@ -62,13 +71,7 @@ VALUES
   '1-Mo Vakxo',
   'Enjoy 30 days of Vakxo Pro AI workspace platform for your development team.',
   'credit',
-  50,
-  50,
-  50,
-  0,
-  35,
-  true,
-  30,
+  50, 50, 50, 0, 35, true, 30,
   'Present this code at the Pathixo counter to receive your license key.'
 ),
 (
@@ -77,44 +80,26 @@ VALUES
   '30% Vakxo',
   '30% discount voucher applied to the Vakxo AI developer platform annual subscription.',
   'discount',
-  0,
-  0,
-  NULL,
-  0,
-  15,
-  true,
-  30,
+  0, 0, NULL, 0, 15, true, 30,
   'Apply this voucher code at checkout on vakxo.com or show it to our booth team.'
 ),
 (
-  'discount-20-dev',
-  '20% Off Custom Engineering Milestone',
-  '20% Dev',
-  '20% credit applied to the first sprint of custom AI or software engineering with Pathixo.',
+  'discount-20-vakxo',
+  '20% Off Vakxo Pro Subscription',
+  '20% Vakxo',
+  '20% discount voucher applied to Vakxo Pro monthly or annual developer license.',
   'discount',
-  0,
-  0,
-  NULL,
-  0,
-  15,
-  true,
-  60,
-  'Mention this voucher code during your project kickoff call with Pathixo leadership.'
+  0, 0, NULL, 0, 15, true, 60,
+  'Apply this voucher code at checkout on vakxo.com or show it to our booth team.'
 ),
 (
-  'discount-50-cloud',
-  '50% Off Cloud & DevOps Setup',
-  '50% Cloud',
-  '50% discount on initial cloud infrastructure, CI/CD pipeline automation, or Kubernetes setup.',
+  'discount-50-krocpdf',
+  '50% Off krocPDF Pro Access',
+  '50% kroc',
+  '50% discount on krocPDF Pro high-speed document intelligence and OCR suite.',
   'discount',
-  0,
-  0,
-  NULL,
-  0,
-  10,
-  true,
-  45,
-  'Show this code to our solutions architect to apply the 50% cloud discount.'
+  0, 0, NULL, 0, 10, true, 45,
+  'Use this voucher code at checkout inside krocPDF to claim your 50% discount.'
 ),
 (
   'krocpdf-6-month',
@@ -122,13 +107,7 @@ VALUES
   '6M krocPDF',
   '6 months of unlimited, high-speed in-browser PDF manipulation and document extraction with krocPDF Pro.',
   'credit',
-  0,
-  0,
-  NULL,
-  0,
-  8,
-  true,
-  60,
+  0, 0, NULL, 0, 8, true, 60,
   'Enter this voucher code inside krocPDF to unlock 6 months of Pro tier access.'
 ),
 (
@@ -137,13 +116,7 @@ VALUES
   '3M krocPDF',
   'Unlimited fast in-browser document processing and structured extraction for your entire team.',
   'credit',
-  0,
-  0,
-  NULL,
-  0,
-  15,
-  true,
-  60,
+  0, 0, NULL, 0, 15, true, 60,
   'Use this pass code to activate team access on krocPDF.'
 ),
 (
@@ -152,13 +125,7 @@ VALUES
   '6-Mo Vakxo',
   '6-Month access to Vakxo AI developer environment with voice actions and terminal automation.',
   'credit',
-  0,
-  0,
-  NULL,
-  0,
-  0,
-  true,
-  90,
+  0, 0, NULL, 0, 0, true, 90,
   'Special promotional tier voucher code.'
 )
 ON CONFLICT (slug) DO UPDATE SET
@@ -174,7 +141,7 @@ ON CONFLICT (slug) DO UPDATE SET
   expiry_days = EXCLUDED.expiry_days,
   redemption_instructions = EXCLUDED.redemption_instructions;
 
--- 4. Replace spin_wheel function with probability_weight > 0 protection
+-- 5. Re-create spin_wheel stored procedure
 CREATE OR REPLACE FUNCTION public.spin_wheel(
   p_visitor_id UUID,
   p_idempotency_key TEXT
@@ -251,7 +218,7 @@ BEGIN
     );
   END IF;
 
-  -- 3. Calculate active weights and pick reward (excludes probability_weight = 0)
+  -- 3. Calculate active weights and pick reward (strictly excludes probability_weight = 0)
   WHILE v_retries < 5 AND NOT v_allocated LOOP
     v_retries := v_retries + 1;
     v_total_weight := 0;
@@ -265,7 +232,6 @@ BEGIN
       AND (total_inventory = 0 OR remaining_inventory > 0);
 
     IF v_total_weight <= 0 THEN
-      -- Fallback to active voucher
       SELECT id, slug, name, COALESCE(display_label, name) AS display_label, description, reward_type, expiry_days, redemption_instructions
       INTO v_chosen_reward
       FROM public.rewards
@@ -376,8 +342,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 5. Verification Query: View all active rewards in Supabase
+-- 6. Verification: View the final 8 rows in public.rewards (should return EXACTLY 8 rows)
 SELECT id, slug, display_label, name, probability_weight, total_inventory, is_active
 FROM public.rewards
-WHERE is_active = true
 ORDER BY id;
