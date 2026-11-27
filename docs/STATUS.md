@@ -6,8 +6,8 @@
 | 1 Scaffold + DB | done | Next.js scaffold created; SQL migrations, RLS, spin function, seed data applied and verified |
 | 2 Backend APIs | done | All 6 endpoints built (/api/register, /api/spin, /api/spin/result, /api/inquiry, /api/products, /api/events); strict Zod validation, Turnstile, session security, rate limiters, build passing |
 | 3 Public UI | done | Minimalist mobile-first UI built; Hero, Products, Services, Approach, Registration, Inquiry modal, Spin & Win wheel with confetti, /privacy, /terms; build passing |
-| 4 Admin | not started | Next up (Admin login, dashboard, lead triage, lucky draw redemption, CSV export, audit logs) |
-| 5 Security + tests | not started | |
+| 4 Admin | done | Admin auth via Supabase Auth + @supabase/ssr; role hierarchy (super_admin, admin, viewer); dashboard, leads table, inquiries pipeline, stall voucher quick-redemption tool, streaming CSV exports with formula injection protection, audit logs, admin CLI script; build passing |
+| 5 Security + tests | not started | Next up (Security headers, CSP, concurrent spin test, inventory race test, rate-limit load test) |
 | 6 Deploy + QR | not started | |
 | 7 Docs + runbook | not started | |
 
@@ -18,6 +18,7 @@
 
 ## Manual steps for the owner
 1. Re-run `supabase/migrations/20260101000001_spin_function.sql` in your Supabase SQL Editor once (adds `extensions.` schema resolution for `gen_random_bytes`).
+2. Run `node scripts/create-admin.mjs <your-email> <your-password> super_admin "<your-name>"` locally to create your initial administrator login.
 
 ## Known issues
 (none)
