@@ -1,17 +1,54 @@
+"use client";
+
+import { useState } from "react";
+import { Navbar } from "@/components/public/Navbar";
+import { Hero } from "@/components/public/Hero";
+import { Positioning } from "@/components/public/Positioning";
+import { ProductShowcase } from "@/components/public/ProductShowcase";
+import { ServicesGrid } from "@/components/public/ServicesGrid";
+import { Approach } from "@/components/public/Approach";
+import { WhyPathixo } from "@/components/public/WhyPathixo";
+import { RegistrationForm } from "@/components/public/RegistrationForm";
+import { InquiryModal } from "@/components/public/InquiryModal";
+import { Footer } from "@/components/public/Footer";
+
 export default function HomePage() {
+  const [isInquiryOpen, setIsInquiryOpen] = useState(false);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 text-center">
-      <div className="max-w-md space-y-4">
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-brand-300">
-          <span>Expo Digital Platform</span>
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-          PATHIXO PRIVATE LIMITED
-        </h1>
-        <p className="text-sm text-neutral-400">
-          We Build Intelligent Products. We Engineer Business Solutions.
-        </p>
-      </div>
-    </main>
+    <div className="min-h-screen bg-[#09090b] text-[#f4f4f5] selection:bg-brand-500 selection:text-white overflow-x-hidden">
+      {/* Top Navigation */}
+      <Navbar onOpenInquiry={() => setIsInquiryOpen(true)} />
+
+      {/* Hero Section */}
+      <Hero onOpenInquiry={() => setIsInquiryOpen(true)} />
+
+      {/* Positioning / Two Core Pillars */}
+      <Positioning />
+
+      {/* Product Showcase (Vakxo, Crock PDF, Custom Engineering) */}
+      <ProductShowcase onOpenInquiry={() => setIsInquiryOpen(true)} />
+
+      {/* Services Grid (from pathixo.com) */}
+      <ServicesGrid onOpenInquiry={() => setIsInquiryOpen(true)} />
+
+      {/* Our Engineering Approach / How We Work */}
+      <Approach />
+
+      {/* Why Pathixo */}
+      <WhyPathixo />
+
+      {/* Registration & Lead Capture Form */}
+      <RegistrationForm />
+
+      {/* Footer */}
+      <Footer />
+
+      {/* Project Inquiry Modal / Bottom Sheet */}
+      <InquiryModal
+        isOpen={isInquiryOpen}
+        onClose={() => setIsInquiryOpen(false)}
+      />
+    </div>
   );
 }
