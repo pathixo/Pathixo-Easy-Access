@@ -68,7 +68,7 @@ export default function AdminLoginPage() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Adminji12"
+                placeholder="Enter username or email"
                 className="h-11 w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3.5 text-xs text-white placeholder-neutral-500 focus:border-brand-500 focus:outline-none"
               />
             </div>

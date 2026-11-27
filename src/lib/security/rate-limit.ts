@@ -85,3 +85,6 @@ export const spinRateLimiter = createLimiter(10, 60, "spin");
 
 // 4. Analytics events limiter: 60 requests per 60 seconds per IP
 export const eventsRateLimiter = createLimiter(60, 60, "events");
+
+// 5. Admin login limiter: 5 requests per 60 seconds per IP
+export const adminLoginRateLimiter = createLimiter(5, 60, "admin_login");
