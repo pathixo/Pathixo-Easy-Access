@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { Sparkles } from "lucide-react";
 import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
 import { getDevStore } from "@/lib/dev-store";
 import { formatKolkataTime } from "@/lib/admin/utils";
@@ -89,14 +87,6 @@ export default async function AdminLuckyDrawPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/test-spin"
-            target="_blank"
-            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#ccff00]/40 bg-[#ccff00]/10 px-3.5 font-mono text-xs font-bold text-[#ccff00] hover:bg-[#ccff00] hover:text-black transition"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>Launch Testing Lab</span>
-          </Link>
           <div className="rounded-xl border border-[#252a31] bg-[#101214] px-4 py-2 text-right">
             <span className="block font-mono text-[10px] uppercase text-neutral-400">System Mode</span>
             <span className="font-mono text-xs font-bold text-[#ccff00]">LIVE EXPO ACTIVE</span>
