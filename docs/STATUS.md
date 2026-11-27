@@ -3,10 +3,10 @@
 | Phase | State | Notes |
 |---|---|---|
 | 0 Accounts/assets | done | Supabase dev project created; keys in .env.local; connection verified; remote git linked |
-| 1 Scaffold + DB | done | Next.js scaffold created; SQL migrations, RLS, spin function, seed data applied and verified; build & typecheck pass |
-| 2 Backend APIs | ready to start | Implementation plan ready for review |
-| 3 Public UI | not started | |
-| 4 Admin | not started | |
+| 1 Scaffold + DB | done | Next.js scaffold created; SQL migrations, RLS, spin function, seed data applied and verified |
+| 2 Backend APIs | done | All 6 endpoints built (/api/register, /api/spin, /api/spin/result, /api/inquiry, /api/products, /api/events); strict Zod validation, Turnstile, session security, rate limiters, build passing |
+| 3 Public UI | not started | Ready to plan |
+| 4 Admin | not started | Can run in parallel or after Phase 3 |
 | 5 Security + tests | not started | |
 | 6 Deploy + QR | not started | |
 | 7 Docs + runbook | not started | |
@@ -17,7 +17,7 @@
 - Duplicate-registration policy (default: do not re-issue spin session; stall staff can assist)
 
 ## Manual steps for the owner
-(All Phase 0 and Phase 1 manual steps completed!)
+1. Re-run `supabase/migrations/20260101000001_spin_function.sql` in your Supabase SQL Editor once (adds `extensions.` schema resolution for `gen_random_bytes`).
 
 ## Known issues
 (none)
