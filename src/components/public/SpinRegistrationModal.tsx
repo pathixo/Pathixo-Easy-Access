@@ -142,7 +142,7 @@ export function SpinRegistrationModal({
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-[#ccff00] animate-pulse" />
                 <span className="font-mono text-[11px] font-semibold tracking-wider text-[#ccff00] uppercase">
-                  {"// MEERUT TRADE SHOW • VISITOR CHECK-IN"}
+                  MEERUT TRADE SHOW • VISITOR CHECK-IN
                 </span>
               </div>
               <button
@@ -163,7 +163,7 @@ export function SpinRegistrationModal({
 
                 <div className="mt-4">
                   <span className="inline-block rounded-full bg-amber-400/10 border border-amber-400/30 px-3 py-1 font-mono text-[11px] font-bold text-amber-400 uppercase">
-                    {"// RECORD ALREADY REGISTERED"}
+                    RECORD ALREADY REGISTERED
                   </span>
                   <h3 className="mt-2 text-xl font-black uppercase tracking-tight text-white">
                     ONE SPIN PER VISITOR

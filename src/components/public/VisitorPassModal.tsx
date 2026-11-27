@@ -180,7 +180,7 @@ export function VisitorPassModal({
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-[#ccff00] animate-pulse" />
                 <span className="font-mono text-[11px] font-semibold tracking-wider text-[#ccff00] uppercase">
-                  {"// MEERUT TRADE SHOW • VISITOR CHECK-IN"}
+                  MEERUT TRADE SHOW • VISITOR CHECK-IN
                 </span>
               </div>
               <button
@@ -352,7 +352,7 @@ export function VisitorPassModal({
 
                 <div className="mt-4">
                   <span className="inline-block rounded-full bg-[#ccff00]/10 border border-[#ccff00]/30 px-3 py-1 font-mono text-[11px] font-bold text-[#ccff00] uppercase">
-                    {"// VISITOR PASS VERIFIED"}
+                    VISITOR PASS VERIFIED
                   </span>
                   <h3 className="mt-2 text-2xl font-black uppercase tracking-tight text-white">
                     WELCOME, {registeredName}!

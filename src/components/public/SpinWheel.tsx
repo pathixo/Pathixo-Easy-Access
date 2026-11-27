@@ -330,7 +330,7 @@ export function SpinWheel() {
           {/* Under-Wheel Explainer Banner */}
           <div className="mt-6 rounded-2xl border border-[#252a31] bg-[#141619] p-4 text-left font-mono text-xs text-neutral-300">
             <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#ccff00] pb-2 border-b border-[#252a31]">
-              <span>{"// FAIR ALLOCATION GUARANTEE"}</span>
+              <span>FAIR ALLOCATION GUARANTEE</span>
               <span>1 SPIN / VISITOR</span>
             </div>
             <p className="mt-2 text-neutral-400 leading-relaxed text-[11px]">
@@ -348,7 +348,7 @@ export function SpinWheel() {
           </div>
 
           <span className="mt-4 inline-block rounded-full border border-[#ccff00]/40 bg-[#ccff00]/10 px-3 py-1 font-mono text-[11px] font-bold text-[#ccff00] uppercase">
-            {"// PRIZE VERIFIED & ASSIGNED"}
+            PRIZE VERIFIED & ASSIGNED
           </span>
 
           <h2 className="mt-2 text-2xl font-black uppercase tracking-tight text-white sm:text-3xl">

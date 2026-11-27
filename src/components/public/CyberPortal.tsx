@@ -183,7 +183,7 @@ export function CyberPortal() {
                   {siteConfig.company.brandName}
                 </span>
                 <span className="hidden sm:inline-block font-mono text-[10px] text-neutral-400">
-                  {"// PRIVATE LIMITED"}
+                  PRIVATE LIMITED
                 </span>
               </div>
             </div>
@@ -243,7 +243,7 @@ export function CyberPortal() {
           <section className="space-y-4">
             <div className="flex items-center justify-between px-2">
               <span className="font-mono text-xs font-bold tracking-widest text-neutral-400 uppercase">
-                {"// OFFICIAL PLATFORMS & PRODUCTS"}
+                OFFICIAL PLATFORMS & PRODUCTS
               </span>
               {!isRegistered ? (
                 <button
@@ -415,7 +415,7 @@ export function CyberPortal() {
           {/* Social Platforms (Uniform Pill-shaped Buttons) */}
           <section className="space-y-3">
             <div className="font-mono text-xs font-bold tracking-widest text-neutral-400 uppercase px-2">
-              {"// CONNECT ON SOCIAL"}
+              CONNECT ON SOCIAL
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
