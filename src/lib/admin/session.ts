@@ -5,8 +5,8 @@ import { cookies, headers } from "next/headers";
 export const ADMIN_SESSION_COOKIE = "px_admin_session";
 const SESSION_EXPIRY = "12h";
 
-const SUPER_ADMIN_USERNAME = "Adminji12";
-const SUPER_ADMIN_PASSWORD = "Admin@12@12";
+const SUPER_ADMIN_USERNAME = process.env.SUPER_ADMIN_USERNAME || "Adminji12";
+const SUPER_ADMIN_PASSWORD = process.env.SUPER_ADMIN_PASSWORD || "Admin@12@12";
 
 function getSecretKey(): Uint8Array {
   const secret =

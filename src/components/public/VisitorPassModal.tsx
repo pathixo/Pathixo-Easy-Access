@@ -11,7 +11,7 @@ import { TurnstileWidget } from "./TurnstileWidget";
 export interface VisitorPassModalProps {
   isOpen: boolean;
   onClose: () => void;
-  targetDestination: {
+  targetDestination?: {
     name: string;
     url: string;
     category?: string;
@@ -27,12 +27,18 @@ interface FormInputs {
   privacy_consent: boolean;
 }
 
+const DEFAULT_DESTINATION = {
+  name: "Pathixo Digital Hub",
+  url: "https://pathixo.com",
+};
+
 export function VisitorPassModal({
   isOpen,
   onClose,
-  targetDestination,
+  targetDestination = DEFAULT_DESTINATION,
   onRegisterSuccess,
 }: VisitorPassModalProps) {
+  const dest = targetDestination || DEFAULT_DESTINATION;
   const utm = useUtm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -53,9 +59,9 @@ export function VisitorPassModal({
   } = useForm<FormInputs>({
     defaultValues: {
       privacy_consent: false,
-      interested_product: targetDestination.name.toLowerCase().includes("vakxo")
+      interested_product: dest.name.toLowerCase().includes("vakxo")
         ? "vakxo"
-        : targetDestination.name.toLowerCase().includes("kroc")
+        : dest.name.toLowerCase().includes("kroc")
           ? "kroc-pdf"
           : "all",
     },
@@ -116,8 +122,8 @@ export function VisitorPassModal({
   };
 
   const handleOpenDestination = () => {
-    if (targetDestination.url) {
-      window.open(targetDestination.url, "_blank", "noopener,noreferrer");
+    if (dest.url) {
+      window.open(dest.url, "_blank", "noopener,noreferrer");
     }
     onClose();
   };
@@ -171,7 +177,7 @@ export function VisitorPassModal({
               <div className="mt-4">
                 <div className="mb-5">
                   <h3 className="text-xl font-black uppercase tracking-tight text-white sm:text-2xl">
-                    UNLOCK {targetDestination.name}
+                    UNLOCK {dest.name}
                   </h3>
                   <p className="mt-1 font-mono text-xs text-neutral-400">
                     Quick 15-second pass registration for live booth visitors at Meerut Trade Show.
@@ -366,7 +372,7 @@ export function VisitorPassModal({
                     onClick={handleOpenDestination}
                     className="flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] font-mono text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition"
                   >
-                    <span>OPEN {targetDestination.name}</span>
+                    <span>OPEN {dest.name}</span>
                     <ExternalLink className="h-4 w-4 stroke-[2.5]" />
                   </button>
 

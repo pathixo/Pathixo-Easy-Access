@@ -2,12 +2,23 @@ import { NextRequest } from "next/server";
 import { createAdminServerClient } from "@/lib/admin/server-client";
 import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
 import { isSuperAdminCredential, setAdminSessionCookie } from "@/lib/admin/session";
+import { adminLoginRateLimiter, getClientIp } from "@/lib/security/rate-limit";
 import { apiError, apiSuccess } from "@/lib/security/errors";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = getClientIp(req);
+    const rateCheck = await adminLoginRateLimiter.limit(clientIp);
+    if (!rateCheck.success) {
+      return apiError(
+        "RATE_LIMITED",
+        "Too many login attempts. Please wait a moment and try again.",
+        429
+      );
+    }
+
     const body = await req.json();
     const email = String(body?.email ?? body?.username ?? "").trim();
     const password = String(body?.password ?? "");
