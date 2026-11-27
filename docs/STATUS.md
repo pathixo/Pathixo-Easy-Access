@@ -3,8 +3,8 @@
 | Phase | State | Notes |
 |---|---|---|
 | 0 Accounts/assets | in progress | Dev Supabase project created; keys configured in .env.local; remote git repo linked |
-| 1 Scaffold + DB | in progress | Next.js scaffold created; SQL migrations, RLS, spin function, seed data, and tests written |
-| 2 Backend APIs | not started | |
+| 1 Scaffold + DB | done | Next.js scaffold created; dependencies installed; migrations, RLS, spin function, seed data, and tests written; build & typecheck passing |
+| 2 Backend APIs | not started | Next up |
 | 3 Public UI | not started | |
 | 4 Admin | not started | |
 | 5 Security + tests | not started | |
