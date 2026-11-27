@@ -8,11 +8,11 @@ const isDev = process.env.NODE_ENV === "development";
 // Strict Content Security Policy allowing only trusted origins
 const cspHeader = `
   default-src 'self' https://*.supabase.co;
-  script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}https://challenges.cloudflare.com;
+  script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}https://challenges.cloudflare.com https://va.vercel-scripts.com;
   style-src 'self' 'unsafe-inline';
   img-src 'self' data: https: blob:;
   font-src 'self' data:;
-  connect-src 'self' https://*.supabase.co https://challenges.cloudflare.com;
+  connect-src 'self' https://*.supabase.co https://challenges.cloudflare.com https://vitals.vercel-insights.com https://*.vercel-insights.com;
   frame-src 'self' https://challenges.cloudflare.com;
   worker-src 'self' blob: https://challenges.cloudflare.com;
   object-src 'none';
