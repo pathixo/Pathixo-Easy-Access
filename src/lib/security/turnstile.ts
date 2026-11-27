@@ -15,10 +15,14 @@ export async function verifyTurnstileToken(
   clientIp?: string
 ): Promise<{ success: boolean; error?: string }> {
   const secretKey = process.env.TURNSTILE_SECRET_KEY;
+  const hasRealSecret =
+    !!secretKey && !secretKey.toLowerCase().includes("disabled");
 
-  // In development or when unconfigured, allow testing with dummy or test keys
-  if (process.env.NODE_ENV !== "production") {
-    if (!secretKey || token === "1x00000000000000000000AA" || token === "test-dev-token" || !token) {
+  // In development, or when no real secret is configured (e.g. local prod
+  // preview with placeholder env vars), allow the official Cloudflare test
+  // tokens so the booth flow can be exercised end-to-end.
+  if (!hasRealSecret || process.env.NODE_ENV !== "production") {
+    if (!token || token === "1x00000000000000000000AA" || token === "test-dev-token") {
       return { success: true };
     }
   }
@@ -27,7 +31,7 @@ export async function verifyTurnstileToken(
     return { success: false, error: "Missing Turnstile verification token" };
   }
 
-  if (!secretKey) {
+  if (!hasRealSecret) {
     return { success: false, error: "Turnstile secret key not configured" };
   }
 

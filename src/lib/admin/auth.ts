@@ -90,6 +90,17 @@ export async function logAuditEvent(
 ): Promise<void> {
   try {
     if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      const { getDevStore } = await import("@/lib/dev-store");
+      getDevStore().auditLogs.unshift({
+        id: crypto.randomUUID(),
+        admin_id: adminId,
+        action,
+        entity_type: entityType,
+        entity_id: entityId || null,
+        details,
+        ip_address: ipAddress || null,
+        created_at: new Date().toISOString(),
+      });
       return;
     }
 

@@ -1,6 +1,7 @@
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { getDevStore } from "@/lib/dev-store";
 import { formatKolkataTime } from "@/lib/admin/utils";
-import { Download, Search, Filter } from "lucide-react";
+import { Download, Search } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -11,44 +12,96 @@ interface LeadsPageProps {
   };
 }
 
+type LeadRow = {
+  id: string;
+  full_name: string;
+  email: string;
+  mobile: string;
+  company: string | null;
+  designation: string | null;
+  interested_product: string | null;
+  created_at: string;
+  spins:
+    | { reward_code?: string; redemption_status?: string; rewards?: { name?: string } | { name?: string }[] | null }
+    | Array<{ reward_code?: string; redemption_status?: string; rewards?: { name?: string } | { name?: string }[] | null }>
+    | null;
+};
+
 export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
-  const supabase = getAdminClient();
   const q = searchParams?.q?.toLowerCase() || "";
   const product = searchParams?.product || "";
+  let leads: LeadRow[] = [];
 
-  let query = supabase
-    .from("visitors")
-    .select(`
-      id,
-      full_name,
-      email,
-      mobile,
-      company,
-      designation,
-      interested_product,
-      privacy_consent,
-      privacy_consent_at,
-      marketing_consent,
-      utm_source,
-      utm_campaign,
-      created_at,
-      spins (
-        reward_code,
-        redemption_status,
-        rewards (name)
-      )
-    `)
-    .order("created_at", { ascending: false })
-    .limit(100);
+  if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+    const store = getDevStore();
+    leads = store.visitors
+      .filter((v) => {
+        const matchesQ =
+          !q ||
+          v.full_name.toLowerCase().includes(q) ||
+          v.email.toLowerCase().includes(q) ||
+          v.mobile.includes(q);
+        return matchesQ;
+      })
+      .slice(0, 100)
+      .map((v) => {
+        const spin = store.spins.find((s) => s.visitor_id === v.id);
+        const reward = spin ? store.rewards.find((r) => r.id === spin.reward_id) : null;
+        return {
+          id: v.id,
+          full_name: v.full_name,
+          email: v.email,
+          mobile: v.mobile,
+          company: null,
+          designation: null,
+          interested_product: null,
+          created_at: v.created_at,
+          spins: spin
+            ? {
+                reward_code: spin.reward_code,
+                redemption_status: spin.redemption_status,
+                rewards: { name: reward?.name || spin.prize_label },
+              }
+            : null,
+        };
+      });
+  } else {
+    const supabase = getAdminClient();
+    let query = supabase
+      .from("visitors")
+      .select(`
+        id,
+        full_name,
+        email,
+        mobile,
+        company,
+        designation,
+        interested_product,
+        privacy_consent,
+        privacy_consent_at,
+        marketing_consent,
+        utm_source,
+        utm_campaign,
+        created_at,
+        spins (
+          reward_code,
+          redemption_status,
+          rewards (name)
+        )
+      `)
+      .order("created_at", { ascending: false })
+      .limit(100);
 
-  if (q) {
-    query = query.or(`full_name.ilike.%${q}%,email.ilike.%${q}%,mobile.ilike.%${q}%`);
+    if (q) {
+      query = query.or(`full_name.ilike.%${q}%,email.ilike.%${q}%,mobile.ilike.%${q}%`);
+    }
+    if (product && product !== "all") {
+      query = query.eq("interested_product", product);
+    }
+
+    const { data } = await query;
+    leads = (data || []) as LeadRow[];
   }
-  if (product && product !== "all") {
-    query = query.eq("interested_product", product);
-  }
-
-  const { data: leads, error } = await query;
 
   return (
     <div className="space-y-6 max-w-6xl">

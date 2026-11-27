@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
 import { getDevStore } from "@/lib/dev-store";
-import { getVisitorSession } from "@/lib/security/session";
+import { clearVisitorSessionCookie, getVisitorSession } from "@/lib/security/session";
 import { apiError, apiSuccess } from "@/lib/security/errors";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +21,17 @@ export async function GET(req: NextRequest) {
     // 2. Local Dev Mode Fallback when Supabase is not configured
     if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
       const store = getDevStore();
+      const visitor = store.visitors.find((v) => v.id === session.visitorId);
+      if (!visitor) {
+        // Cookie from an older dev-server process (in-memory store was reset).
+        await clearVisitorSessionCookie();
+        return apiError(
+          "UNAUTHORIZED",
+          "Your session has expired. Please register again.",
+          401
+        );
+      }
+
       const spin = store.spins.find((s) => s.visitor_id === session.visitorId);
       if (!spin) {
         return apiError("NO_SPIN_FOUND", "No lucky draw participation record found for this session.", 404);
@@ -38,14 +49,37 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // 3. Fetch existing spin for this visitor
+    // 3. Confirm the signed cookie still points at a real visitor row.
+    // This catches cookies left over from another environment/database.
     const supabase = getAdminClient();
+    const { data: visitor, error: visitorError } = await supabase
+      .from("visitors")
+      .select("id")
+      .eq("id", session.visitorId)
+      .maybeSingle();
+
+    if (visitorError) {
+      console.error("Fetch visitor session error:", visitorError.message);
+      return apiError("DATABASE_ERROR", "Failed to verify your session.", 500);
+    }
+
+    if (!visitor) {
+      await clearVisitorSessionCookie();
+      return apiError(
+        "UNAUTHORIZED",
+        "Your session has expired. Please register again.",
+        401
+      );
+    }
+
+    // 4. Fetch existing spin for this visitor
     const { data, error } = await supabase
       .from("spins")
       .select(`
         id,
         reward_code,
         redemption_status,
+        email_status,
         expires_at,
         created_at,
         rewards (
@@ -75,6 +109,7 @@ export async function GET(req: NextRequest) {
       spin_id: data.id,
       reward_code: data.reward_code,
       redemption_status: data.redemption_status,
+      email_status: data.email_status,
       expires_at: data.expires_at,
       created_at: data.created_at,
       reward: reward || null,

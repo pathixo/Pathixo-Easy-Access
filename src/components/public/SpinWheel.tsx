@@ -15,6 +15,7 @@ import {
   MailCheck,
   ArrowRight,
 } from "lucide-react";
+import { TurnstileWidget } from "./TurnstileWidget";
 
 interface RewardData {
   spin_id: string;
@@ -30,17 +31,55 @@ interface RewardData {
   email_status?: string;
 }
 
-// 8 Cyber-Gamified Segments matching Trade Show DB Rewards
-const SEGMENTS = [
-  { label: "1-Yr Vakxo Pro", slug: "vakxo-1-year", color: "#ccff00", text: "#0a0b0c" },
-  { label: "20% Off Dev", slug: "discount-20-dev", color: "#16191d", text: "#f4f4f5" },
-  { label: "Booth Swag", slug: "booth-tech-swag", color: "#ccff00", text: "#0a0b0c" },
-  { label: "1-Mo Vakxo Pro", slug: "vakxo-1-month", color: "#101214", text: "#ccff00" },
-  { label: "AI Strategy Call", slug: "ai-strategy-call", color: "#16191d", text: "#f4f4f5" },
-  { label: "50% Off Cloud", slug: "discount-50-cloud", color: "#101214", text: "#ccff00" },
-  { label: "3-Mo krocPDF", slug: "extended-trial-3mo", color: "#16191d", text: "#f4f4f5" },
-  { label: "VIP Expo Pass", slug: "vip-expo-pass", color: "#101214", text: "#a1a1aa" },
+interface WheelSegment {
+  label: string;
+  slug: string;
+  color: string;
+  text: string;
+}
+
+interface RewardSummary {
+  slug: string;
+  name: string;
+  display_label?: string | null;
+}
+
+// Visual style palette. Segments are built from the rewards that are actually
+// active in the database, so the wheel can never show a prize the server will
+// not award (or award a prize that is not on the wheel).
+const SEGMENT_STYLES = [
+  { color: "#ccff00", text: "#0a0b0c" },
+  { color: "#16191d", text: "#f4f4f5" },
+  { color: "#ccff00", text: "#0a0b0c" },
+  { color: "#101214", text: "#ccff00" },
+  { color: "#16191d", text: "#f4f4f5" },
+  { color: "#101214", text: "#ccff00" },
+  { color: "#16191d", text: "#f4f4f5" },
+  { color: "#101214", text: "#a1a1aa" },
+  { color: "#ccff00", text: "#0a0b0c" },
 ];
+
+const FALLBACK_REWARDS: RewardSummary[] = [
+  { slug: "vakxo-1-year", name: "1-Year Vakxo Pro Subscription", display_label: "1-Yr Vakxo Pro" },
+  { slug: "discount-20-dev", name: "20% Off Custom Engineering Milestone", display_label: "20% Off Dev" },
+  { slug: "booth-tech-swag", name: "Pathixo Premium Tech Merchandise", display_label: "Booth Swag" },
+  { slug: "vakxo-1-month", name: "1-Month Vakxo Pro Access", display_label: "1-Mo Vakxo Pro" },
+  { slug: "ai-strategy-call", name: "Free 1-on-1 AI Architecture Review", display_label: "AI Strategy Call" },
+  { slug: "discount-50-cloud", name: "50% Off Cloud & DevOps Setup", display_label: "50% Off Cloud" },
+  { slug: "extended-trial-3mo", name: "3-Month krocPDF Team Pass", display_label: "3-Mo krocPDF" },
+  { slug: "vip-expo-pass", name: "VIP Exhibition Networking Voucher", display_label: "VIP Expo Pass" },
+  { slug: "thank-you-pass", name: "Special Exhibition Thank-You Voucher", display_label: "Thank You Pass" },
+];
+
+function toWheelSegments(rewards: RewardSummary[]): WheelSegment[] {
+  return rewards.map((reward, index) => ({
+    label: reward.display_label || reward.name,
+    slug: reward.slug,
+    ...SEGMENT_STYLES[index % SEGMENT_STYLES.length],
+  }));
+}
+
+const FALLBACK_SEGMENTS = toWheelSegments(FALLBACK_REWARDS);
 
 export function SpinWheel() {
   const [isSpinning, setIsSpinning] = useState(false);
@@ -50,6 +89,7 @@ export function SpinWheel() {
   const [reward, setReward] = useState<RewardData | null>(null);
   const [copied, setCopied] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [segments, setSegments] = useState<WheelSegment[]>(FALLBACK_SEGMENTS);
 
   // Quick Inline Registration State for direct /spin visitors
   const [regName, setRegName] = useState("");
@@ -58,9 +98,12 @@ export function SpinWheel() {
   const [regConsent, setRegConsent] = useState(true);
   const [isRegistering, setIsRegistering] = useState(false);
   const [regError, setRegError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const tickIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const segmentsRef = useRef<WheelSegment[]>(FALLBACK_SEGMENTS);
 
   useEffect(() => {
     const saved = localStorage.getItem("px_wheel_muted");
@@ -134,18 +177,60 @@ export function SpinWheel() {
     }
   };
 
-  // Background check for existing reward or session (NEVER blocks the wheel from rendering)
+  // Keep the latest segment list available to the async spin handler.
+  useEffect(() => {
+    segmentsRef.current = segments;
+  }, [segments]);
+
+  // Load the active prize list so the wheel matches the server's real pool.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRewards() {
+      try {
+        const res = await fetch("/api/spin/rewards", { cache: "no-store" });
+        if (!res.ok) return;
+        const json = await res.json();
+        if (
+          !cancelled &&
+          json?.ok &&
+          Array.isArray(json.data) &&
+          json.data.length >= 2
+        ) {
+          setSegments(toWheelSegments(json.data as RewardSummary[]));
+        }
+      } catch {
+        // Keep the fallback wheel visible.
+      }
+    }
+
+    loadRewards();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Background check for an existing reward or visitor session.
+  // The wheel stays visible while this runs; only a confirmed missing session
+  // reveals the inline registration form.
   useEffect(() => {
     async function checkExisting() {
       try {
-        const res = await fetch("/api/spin/result");
+        const res = await fetch("/api/spin/result", { cache: "no-store" });
+
         if (res.status === 401) {
           setUnauthorized(true);
           return;
         }
 
-        const json = await res.json();
-        if (json.ok && json.data) {
+        // Valid session, but this visitor has not spun yet.
+        if (res.status === 404) {
+          setUnauthorized(false);
+          return;
+        }
+
+        const json = await res.json().catch(() => null);
+        if (res.ok && json?.ok && json.data) {
           const d = json.data;
           setReward({
             spin_id: d.spin_id,
@@ -161,11 +246,23 @@ export function SpinWheel() {
               d.reward?.redemption_instructions || "Show this code at our booth counter.",
             email_status: d.email_status,
           });
+          setUnauthorized(false);
+          return;
         }
+
+        // Do not leave the visitor with a dead wheel when the status check
+        // fails. Showing the pass form gives them a recoverable next step.
+        setUnauthorized(true);
+        setErrorMessage(
+          json?.error?.message ||
+            "We could not verify your pass. Enter your details to continue."
+        );
       } catch {
-        // Safe fallback - wheel remains playable
+        setUnauthorized(true);
+        setErrorMessage("Connection problem. Enter your details to continue.");
       }
     }
+
     checkExisting();
   }, []);
 
@@ -211,10 +308,28 @@ export function SpinWheel() {
 
       const outcome = json.data as RewardData;
 
-      let targetIndex = SEGMENTS.findIndex((s) => s.slug === outcome.reward_slug);
-      if (targetIndex === -1) targetIndex = 7;
+      let wheelSegments = segmentsRef.current;
+      let targetIndex = wheelSegments.findIndex((s) => s.slug === outcome.reward_slug);
 
-      const segmentAngle = 360 / SEGMENTS.length;
+      // Defensive: if an admin activated a brand-new prize after this page
+      // loaded, add it to the wheel before animating so the pointer still
+      // lands on the reward the server actually awarded.
+      if (targetIndex === -1) {
+        wheelSegments = [
+          ...wheelSegments,
+          {
+            label: outcome.display_label || outcome.reward_name,
+            slug: outcome.reward_slug,
+            ...SEGMENT_STYLES[wheelSegments.length % SEGMENT_STYLES.length],
+          },
+        ];
+        setSegments(wheelSegments);
+        segmentsRef.current = wheelSegments;
+        targetIndex = wheelSegments.length - 1;
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      }
+
+      const segmentAngle = 360 / wheelSegments.length;
       const segmentCenter = targetIndex * segmentAngle + segmentAngle / 2;
       const totalTurns = 5;
       const targetDegree = totalTurns * 360 + (360 - segmentCenter);
@@ -290,6 +405,16 @@ export function SpinWheel() {
       return;
     }
 
+    const token =
+      turnstileToken ||
+      (process.env.NODE_ENV !== "production" ? "1x00000000000000000000AA" : "");
+
+    if (!token) {
+      setRegError("Please complete the security check before continuing.");
+      setIsRegistering(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/register", {
         method: "POST",
@@ -299,7 +424,7 @@ export function SpinWheel() {
           mobile: cleanMobile,
           email: regEmail.trim().toLowerCase(),
           privacy_consent: true,
-          turnstile_token: "1x00000000000000000000AA",
+          turnstile_token: token,
           interested_product: "all",
           utm_source: "booth_spin_kiosk",
           utm_medium: "lucky_draw",
@@ -311,6 +436,9 @@ export function SpinWheel() {
       if (!res.ok || !json.ok) {
         setRegError(json?.error?.message || "Registration failed. Please check your details.");
         setIsRegistering(false);
+        // Turnstile tokens are single-use; request a fresh one for the retry.
+        setTurnstileToken("");
+        setTurnstileResetKey((key) => key + 1);
         return;
       }
 
@@ -318,17 +446,17 @@ export function SpinWheel() {
       if (json.data?.already_spun && json.data?.spin) {
         const s = json.data.spin;
         setReward({
-          spin_id: "existing",
-          reward_id: "existing",
+          spin_id: s.spin_id || "existing",
+          reward_id: s.reward_id || "existing",
           reward_name: s.reward_name,
-          display_label: s.reward_name,
+          display_label: s.display_label || s.reward_name,
           reward_slug: s.reward_slug || "vip-expo-pass",
-          reward_type: "discount",
+          reward_type: s.reward_type || "no_prize",
           reward_description: s.reward_description,
           reward_code: s.reward_code,
           expires_at: s.expires_at,
           redemption_instructions: s.redemption_instructions,
-          email_status: "sent",
+          email_status: s.email_status || "pending",
         });
         setUnauthorized(false);
         setIsRegistering(false);
@@ -344,6 +472,8 @@ export function SpinWheel() {
     } catch {
       setRegError("Network error. Please try again.");
       setIsRegistering(false);
+      setTurnstileToken("");
+      setTurnstileResetKey((key) => key + 1);
     }
   };
 
@@ -431,8 +561,8 @@ export function SpinWheel() {
               className="h-[300px] w-[300px] rounded-full border-4 border-[#ccff00]/60 shadow-[0_0_30px_rgba(204,255,0,0.12)] relative overflow-hidden bg-[#101214]"
             >
               <svg viewBox="0 0 100 100" className="h-full w-full">
-                {SEGMENTS.map((seg, i) => {
-                  const angle = 360 / SEGMENTS.length;
+                {segments.map((seg, i) => {
+                  const angle = 360 / segments.length;
                   const startAngle = i * angle;
                   const endAngle = (i + 1) * angle;
 
@@ -570,10 +700,19 @@ export function SpinWheel() {
                   </label>
                 </div>
 
+                <TurnstileWidget
+                  onVerify={setTurnstileToken}
+                  resetKey={turnstileResetKey}
+                  className="pt-1"
+                />
+
                 <button
                   type="submit"
-                  disabled={isRegistering}
-                  className="mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition disabled:opacity-50 cursor-pointer"
+                  disabled={
+                    isRegistering ||
+                    (!turnstileToken && process.env.NODE_ENV === "production")
+                  }
+                  className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition disabled:opacity-50 cursor-pointer"
                 >
                   {isRegistering ? (
                     <>
@@ -634,10 +773,21 @@ export function SpinWheel() {
             )}
           </div>
 
-          {/* Email Confirmation Pill */}
+          {/* Email delivery status — never claim "sent" before it is confirmed */}
           <div className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#141619] p-3 font-mono text-[11px] text-neutral-300">
-            <MailCheck className="h-4 w-4 text-[#ccff00] shrink-0" />
-            <span>Voucher details sent to your registered email.</span>
+            <MailCheck
+              className={`h-4 w-4 shrink-0 ${
+                reward.email_status === "sent" ? "text-[#ccff00]" : "text-amber-400"
+              }`}
+            />
+            <span>
+              {reward.email_status === "sent"
+                ? "Voucher details sent to your registered email."
+                : reward.email_status === "failed" ||
+                    reward.email_status === "not_configured"
+                  ? "Email delivery is unavailable. Please screenshot this code."
+                  : "Voucher email is being prepared. Please keep this code safe."}
+            </span>
           </div>
 
           {/* Claim Instructions */}

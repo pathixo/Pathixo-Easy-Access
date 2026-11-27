@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, logAuditEvent } from "@/lib/admin/auth";
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { getDevStore } from "@/lib/dev-store";
 import { buildCsv, formatKolkataTime } from "@/lib/admin/utils";
 
 export const dynamic = "force-dynamic";
@@ -8,16 +9,6 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   try {
     const admin = await requireAdmin(["super_admin", "admin"]);
-    const serviceClient = getAdminClient();
-
-    const { data: inquiries, error } = await serviceClient
-      .from("business_inquiries")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error || !inquiries) {
-      return NextResponse.json({ ok: false, error: "Failed to fetch inquiries" }, { status: 500 });
-    }
 
     const headers = [
       "Inquiry ID",
@@ -33,19 +24,47 @@ export async function GET(req: NextRequest) {
       "Submission Time (IST)",
     ];
 
-    const rows = inquiries.map((iq) => [
-      iq.id,
-      iq.full_name,
-      iq.email,
-      iq.mobile,
-      iq.company || "N/A",
-      iq.service_needed || "General",
-      iq.project_description,
-      iq.estimated_budget || "Not Specified",
-      iq.lead_status,
-      iq.notes || "",
-      formatKolkataTime(iq.created_at),
-    ]);
+    let rows: (string | number | boolean | null | undefined)[][] = [];
+
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      rows = getDevStore().inquiries.map((iq) => [
+        iq.id,
+        iq.full_name,
+        iq.email,
+        iq.mobile,
+        iq.company || "N/A",
+        iq.service_needed || "General",
+        iq.project_description,
+        iq.estimated_budget || "Not Specified",
+        iq.lead_status,
+        iq.notes || "",
+        formatKolkataTime(iq.created_at),
+      ]);
+    } else {
+      const serviceClient = getAdminClient();
+      const { data: inquiries, error } = await serviceClient
+        .from("business_inquiries")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error || !inquiries) {
+        return NextResponse.json({ ok: false, error: "Failed to fetch inquiries" }, { status: 500 });
+      }
+
+      rows = inquiries.map((iq) => [
+        iq.id,
+        iq.full_name,
+        iq.email,
+        iq.mobile,
+        iq.company || "N/A",
+        iq.service_needed || "General",
+        iq.project_description,
+        iq.estimated_budget || "Not Specified",
+        iq.lead_status,
+        iq.notes || "",
+        formatKolkataTime(iq.created_at),
+      ]);
+    }
 
     const csvContent = buildCsv(headers, rows);
 

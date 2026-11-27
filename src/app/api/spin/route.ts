@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
 import { executeDevSpin, getDevStore } from "@/lib/dev-store";
-import { getVisitorSession } from "@/lib/security/session";
+import { clearVisitorSessionCookie, getVisitorSession } from "@/lib/security/session";
 import { spinRateLimiter, getClientIp } from "@/lib/security/rate-limit";
 import { apiError, apiSuccess } from "@/lib/security/errors";
 import { sendVoucherEmail } from "@/lib/email/send-voucher";
@@ -46,6 +46,14 @@ export async function POST(req: NextRequest) {
     if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
       const outcome = executeDevSpin(session.visitorId, idempotencyKey.trim());
       if (!outcome.ok) {
+        if (outcome.error?.code === "VISITOR_NOT_FOUND") {
+          await clearVisitorSessionCookie();
+          return apiError(
+            "UNAUTHORIZED",
+            "Your session has expired. Please register again.",
+            401
+          );
+        }
         return apiError(
           outcome.error?.code || "SPIN_FAILED",
           outcome.error?.message || "Unable to complete spin",
@@ -96,6 +104,16 @@ export async function POST(req: NextRequest) {
     if (!data || data.ok === false) {
       const code = data?.error?.code || "SPIN_FAILED";
       const message = data?.error?.message || "Lucky draw allocation could not be completed.";
+
+      if (code === "VISITOR_NOT_FOUND") {
+        await clearVisitorSessionCookie();
+        return apiError(
+          "UNAUTHORIZED",
+          "Your session has expired. Please register again.",
+          401
+        );
+      }
+
       return apiError(code, message, 400);
     }
 

@@ -54,6 +54,19 @@ export interface DevInquiry {
   service_needed: string | null;
   project_description: string;
   estimated_budget: string | null;
+  lead_status: string;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface DevAuditLog {
+  id: string;
+  admin_id: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  details: Record<string, unknown>;
+  ip_address: string | null;
   created_at: string;
 }
 
@@ -62,6 +75,7 @@ interface DevStoreState {
   rewards: DevReward[];
   spins: DevSpin[];
   inquiries: DevInquiry[];
+  auditLogs: DevAuditLog[];
 }
 
 const INITIAL_REWARDS: DevReward[] = [
@@ -204,7 +218,11 @@ export function getDevStore(): DevStoreState {
       rewards: INITIAL_REWARDS.map((r) => ({ ...r })),
       spins: [],
       inquiries: [],
+      auditLogs: [],
     };
+  }
+  if (!globalForDevStore.__pxDevStore.auditLogs) {
+    globalForDevStore.__pxDevStore.auditLogs = [];
   }
   return globalForDevStore.__pxDevStore;
 }

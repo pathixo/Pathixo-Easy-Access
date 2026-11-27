@@ -26,9 +26,15 @@ declare global {
 interface TurnstileWidgetProps {
   onVerify: (token: string) => void;
   className?: string;
+  /** Increment this value to force a fresh challenge (tokens are single-use). */
+  resetKey?: number;
 }
 
-export function TurnstileWidget({ onVerify, className = "" }: TurnstileWidgetProps) {
+export function TurnstileWidget({
+  onVerify,
+  className = "",
+  resetKey = 0,
+}: TurnstileWidgetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
@@ -41,6 +47,27 @@ export function TurnstileWidget({ onVerify, className = "" }: TurnstileWidgetPro
       onVerify("1x00000000000000000000AA");
     }
   }, [siteKey, onVerify]);
+
+  // Cloudflare tokens are single-use. A failed submit increments resetKey so
+  // the next attempt gets a fresh challenge instead of a duplicate-token error.
+  const lastResetKeyRef = useRef(resetKey);
+  useEffect(() => {
+    if (resetKey === lastResetKeyRef.current) return;
+    lastResetKeyRef.current = resetKey;
+
+    if (widgetIdRef.current && window.turnstile) {
+      try {
+        window.turnstile.reset(widgetIdRef.current);
+        return;
+      } catch {
+        // Fall through to the dev token below.
+      }
+    }
+
+    if (process.env.NODE_ENV !== "production" && siteKey === "1x00000000000000000000AA") {
+      onVerify("1x00000000000000000000AA");
+    }
+  }, [resetKey, siteKey, onVerify]);
 
   useEffect(() => {
     if (!scriptLoaded || !containerRef.current || !window.turnstile) {

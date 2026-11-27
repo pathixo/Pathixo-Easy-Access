@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { createAdminServerClient } from "@/lib/admin/server-client";
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
 import { apiError, apiSuccess } from "@/lib/security/errors";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +11,19 @@ export async function POST(req: NextRequest) {
 
     if (!email || !password) {
       return apiError("MISSING_CREDENTIALS", "Email and password are required.", 400);
+    }
+
+    // Dev/no-Supabase mode: allow local access so the dashboard can be tested.
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      return apiSuccess({
+        admin: {
+          id: "dev-admin-local",
+          email: String(email).trim().toLowerCase(),
+          role: "super_admin",
+          full_name: "System Administrator",
+        },
+        dev_mode: true,
+      });
     }
 
     const supabase = createAdminServerClient();
