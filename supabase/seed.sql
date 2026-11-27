@@ -53,79 +53,137 @@ ON CONFLICT (slug) DO UPDATE SET
   display_order = EXCLUDED.display_order,
   is_active = EXCLUDED.is_active;
 
--- 2. Rewards (Lucky Draw Prizes)
--- IMPORTANT: All promotional reward offers are PLACEHOLDERS with is_active = false
--- until officially approved by Pathixo management.
--- The 'no_prize' fallback reward is active to guarantee clean fallback handling.
-
-INSERT INTO public.rewards (slug, name, description, reward_type, total_inventory, remaining_inventory, probability_weight, is_active, expiry_days, redemption_instructions)
+-- 2. Rewards (Lucky Draw Prizes - Active Expo Pool)
+INSERT INTO public.rewards (slug, name, display_label, description, reward_type, total_inventory, remaining_inventory, max_cap, claimed_count, probability_weight, is_active, expiry_days, redemption_instructions)
 VALUES
 (
-  'thank-you-pass',
-  'Special Exhibition Thank-You Voucher',
-  'Thank you for visiting Pathixo at Expo Mart! Connect with our engineering leadership at the stall for priority scheduling on future consultations.',
-  'no_prize',
-  0,
-  0,
-  20,
-  true, -- Fallback reward is active
-  60,
-  'Present this code at the Pathixo exhibition stall to connect directly with our founding engineering team.'
-),
-(
-  'discount-15-custom-dev',
-  '15% Off First Custom Development Milestone',
-  'Receive a 15% discount on the first sprint or development milestone of your custom software or AI engineering project with Pathixo.',
-  'discount',
-  50,
-  50,
-  30,
-  false, -- PLACEHOLDER: Pending Pathixo approval
-  30,
-  'Show this code to the Pathixo stall team or mention it during your project discovery kickoff call.'
-),
-(
-  'free-ai-consultation',
-  'Free 1-on-1 AI Architecture Consultation',
-  'Complimentary 60-minute deep-dive consultation with Pathixo''s Principal AI Architect to review your product roadmap and tech stack.',
-  'consultation',
-  30,
-  30,
-  25,
-  false, -- PLACEHOLDER: Pending Pathixo approval
-  30,
-  'Show this code to book your dedicated 60-minute session with Pathixo engineering leadership.'
-),
-(
-  'credit-10k-cloud',
-  '₹10,000 Cloud Architecture Credit',
-  '₹10,000 credit applicable toward cloud infrastructure setup, deployment automation, or DevOps architecture on projects above ₹1,00,000.',
+  'vakxo-1-year',
+  '1-Year Vakxo Pro Subscription',
+  '1-Yr Vakxo',
+  'Full 12-month access to Vakxo AI developer environment with unlimited voice actions and terminal automation.',
   'credit',
-  15,
-  15,
-  15,
-  false, -- PLACEHOLDER: Pending Pathixo approval
-  45,
-  'Present this code to apply the ₹10,000 credit on your engineering proposal.'
+  2,
+  2,
+  2,
+  0,
+  2,
+  true,
+  90,
+  'Show this code at the booth or reply to your voucher confirmation email to activate your 1-Year Vakxo Pro license.'
 ),
 (
-  'exclusive-merchandise',
-  'Exclusive Pathixo Tech Merchandise',
-  'Collect an exclusive Pathixo engineering notebook, metal pen, or tech swag package at our booth.',
-  'merchandise',
-  25,
-  25,
+  'vakxo-1-month',
+  '1-Month Vakxo Pro Access',
+  '1-Mo Vakxo',
+  'Enjoy 30 days of Vakxo Pro AI workspace platform for your development team.',
+  'credit',
+  50,
+  50,
+  50,
+  0,
+  35,
+  true,
+  30,
+  'Present this code at the Pathixo counter to receive your license key.'
+),
+(
+  'discount-30-vakxo',
+  '30% Off Vakxo Annual Plan',
+  '30% Vakxo',
+  '30% discount voucher applied to the Vakxo AI developer platform annual subscription.',
+  'discount',
+  0,
+  0,
+  NULL,
+  0,
+  15,
+  true,
+  30,
+  'Apply this voucher code at checkout on vakxo.com or show it to our booth team.'
+),
+(
+  'discount-20-dev',
+  '20% Off Custom Engineering Milestone',
+  '20% Dev',
+  '20% credit applied to the first sprint of custom AI or software engineering with Pathixo.',
+  'discount',
+  0,
+  0,
+  NULL,
+  0,
+  15,
+  true,
+  60,
+  'Mention this voucher code during your project kickoff call with Pathixo leadership.'
+),
+(
+  'discount-50-cloud',
+  '50% Off Cloud & DevOps Setup',
+  '50% Cloud',
+  '50% discount on initial cloud infrastructure, CI/CD pipeline automation, or Kubernetes setup.',
+  'discount',
+  0,
+  0,
+  NULL,
+  0,
   10,
-  false, -- PLACEHOLDER: Pending Pathixo approval
-  3,
-  'Claim immediately at the Pathixo exhibition booth counter by showing this redemption code.'
+  true,
+  45,
+  'Show this code to our solutions architect to apply the 50% cloud discount.'
+),
+(
+  'krocpdf-6-month',
+  '6-Month krocPDF Pro Access',
+  '6M krocPDF',
+  '6 months of unlimited, high-speed in-browser PDF manipulation and document extraction with krocPDF Pro.',
+  'credit',
+  0,
+  0,
+  NULL,
+  0,
+  8,
+  true,
+  60,
+  'Enter this voucher code inside krocPDF to unlock 6 months of Pro tier access.'
+),
+(
+  'extended-trial-3mo',
+  '3-Month krocPDF Team Pass',
+  '3M krocPDF',
+  'Unlimited fast in-browser document processing and structured extraction for your entire team.',
+  'credit',
+  0,
+  0,
+  NULL,
+  0,
+  15,
+  true,
+  60,
+  'Use this pass code to activate team access on krocPDF.'
+),
+(
+  'vakxo-6-month',
+  '6-Month Vakxo Pro Subscription',
+  '6-Mo Vakxo',
+  '6-Month access to Vakxo AI developer environment with voice actions and terminal automation.',
+  'credit',
+  0,
+  0,
+  NULL,
+  0,
+  0,
+  true,
+  90,
+  'Special promotional tier voucher code.'
 )
 ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,
+  display_label = EXCLUDED.display_label,
   description = EXCLUDED.description,
   reward_type = EXCLUDED.reward_type,
   total_inventory = EXCLUDED.total_inventory,
   remaining_inventory = EXCLUDED.remaining_inventory,
+  max_cap = EXCLUDED.max_cap,
   probability_weight = EXCLUDED.probability_weight,
   is_active = EXCLUDED.is_active,
   expiry_days = EXCLUDED.expiry_days,
