@@ -20,13 +20,13 @@ VALUES
   true
 ),
 (
-  'crock-pdf',
-  'Crock PDF',
+  'kroc-pdf',
+  'krocPDF',
   'High-Performance PDF Processing & Intelligence',
   'Fast, reliable document intelligence utility designed for high-volume conversion, manipulation, and secure structured extraction from PDF documents.',
   '["Ultra-fast document conversion", "Secure client-side rendering", "OCR & structured extraction", "Zero document retention policy"]'::jsonb,
-  'https://www.krocpdf.app',
-  'Live Web App',
+  'https://www.pathixo.com/products/kroc-pdf',
+  'Enterprise Web App',
   'live',
   2,
   true

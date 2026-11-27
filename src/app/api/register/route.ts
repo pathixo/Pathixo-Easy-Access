@@ -81,6 +81,20 @@ export async function POST(req: NextRequest) {
     if (error) {
       // Duplicate entry detection (PostgreSQL 23505 unique_violation)
       if (error.code === "23505") {
+        // If an existing visitor record matches both the provided mobile and email,
+        // restore their signed session cookie so subsequent /api/spin/result succeeds.
+        const { data: existing } = await supabase
+          .from("visitors")
+          .select("id")
+          .eq("mobile", data.mobile)
+          .eq("email", data.email)
+          .maybeSingle();
+
+        if (existing && existing.id) {
+          await setVisitorSessionCookie(existing.id);
+          return apiSuccess({ registered: true, recovered: true });
+        }
+
         return apiError(
           "DUPLICATE_REGISTRATION",
           "This phone number or email address has already been registered. Please visit our stall team if you need assistance.",

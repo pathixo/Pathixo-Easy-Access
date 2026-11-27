@@ -11,6 +11,16 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        cyber: {
+          lime: "#ccff00",
+          limeLight: "#d9ff33",
+          limeDark: "#a6d200",
+          black: "#0a0b0c",
+          dark: "#101214",
+          surface: "#16191d",
+          border: "#252a31",
+          muted: "#888d96",
+        },
         brand: {
           50: "#f0f7ff",
           100: "#e0effe",
@@ -24,6 +34,12 @@ const config: Config = {
           900: "#0b3d6f",
           950: "#07264a",
         },
+      },
+      boxShadow: {
+        "cyber-sm": "2px 2px 0px 0px #ccff00",
+        "cyber": "4px 4px 0px 0px #ccff00",
+        "cyber-lg": "6px 6px 0px 0px #ccff00",
+        "cyber-white": "4px 4px 0px 0px #ffffff",
       },
     },
   },

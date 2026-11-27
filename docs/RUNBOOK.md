@@ -161,7 +161,7 @@ Convention halls frequently experience cellular network brownouts when 10,000+ a
 Full Name         : __________________________________________________________________
 Mobile (10 digits): ________________________ Email: ___________________________________
 Company / Org     : ________________________ Designation: ____________________________
-Product Interest  : [ ] Vakxo  [ ] Crock PDF  [ ] Custom Engineering  [ ] Other
+Product Interest  : [ ] Vakxo  [ ] krocPDF  [ ] Custom Engineering  [ ] Other
 Consent           : [X] I agree to Pathixo Terms & Privacy Policy (DPDP Act 2023)
 ========================================================================================
 ```
