@@ -17,6 +17,17 @@ ALTER TABLE public.spins
   ADD COLUMN IF NOT EXISTS email_error TEXT,
   ADD COLUMN IF NOT EXISTS fulfillment_status TEXT NOT NULL DEFAULT 'unclaimed' CHECK (fulfillment_status IN ('unclaimed', 'redeemed_at_booth', 'pending_future_gift', 'delivered'));
 
+-- Backfill existing spin rows so user name, phone, email, and won prize name are populated in plain text
+UPDATE public.spins s
+SET 
+  user_name = v.full_name,
+  user_phone = v.mobile,
+  user_email = v.email,
+  prize_label = r.name
+FROM public.visitors v, public.rewards r
+WHERE s.visitor_id = v.id AND s.reward_id = r.id
+  AND (s.user_name IS NULL OR s.prize_label IS NULL);
+
 CREATE UNIQUE INDEX IF NOT EXISTS spins_user_phone_uidx ON public.spins (user_phone) WHERE user_phone IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS spins_user_email_uidx ON public.spins (lower(user_email)) WHERE user_email IS NOT NULL;
 CREATE INDEX IF NOT EXISTS spins_email_status_idx ON public.spins (email_status);
