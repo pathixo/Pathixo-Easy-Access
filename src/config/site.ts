@@ -16,7 +16,7 @@ export const siteConfig = {
     displayPhone: "+91 97110 15569",
     linkedIn: "https://www.linkedin.com/company/pathixopvtltd/",
     instagram: "https://www.instagram.com/pathixopvtltd/?utm_source=qr&r=nametag",
-    facebook: "https://www.facebook.com/share/1HzVrJxZRi/?fb_share_wa_redirect=true",
+    facebook: "https://www.facebook.com/profile.php?id=61596111725576",
   },
   products: {
     vakxo: {
