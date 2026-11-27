@@ -117,6 +117,12 @@ export function VisitorPassModal({
         localStorage.setItem("px_visitor_name", name);
       } catch {}
       onRegisterSuccess?.(name);
+
+      if (targetDestination?.url === "/spin") {
+        setTimeout(() => {
+          window.location.href = "/spin";
+        }, 400);
+      }
     } catch {
       setErrorMessage("Network error. Please try again.");
     } finally {

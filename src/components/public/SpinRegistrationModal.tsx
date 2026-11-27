@@ -142,7 +142,7 @@ export function SpinRegistrationModal({
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-[#ccff00] animate-pulse" />
                 <span className="font-mono text-[11px] font-semibold tracking-wider text-[#ccff00] uppercase">
-                  {"// STALL LUCKY DRAW • VISITOR VERIFICATION"}
+                  {"// MEERUT TRADE SHOW • VISITOR CHECK-IN"}
                 </span>
               </div>
               <button
@@ -202,18 +202,13 @@ export function SpinRegistrationModal({
             ) : (
               /* State 3: Registration Form */
               <div className="mt-4">
-                <div className="mb-5 flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ccff00]/10 border border-[#ccff00]/30 text-[#ccff00]">
-                    <Gift className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black uppercase tracking-tight text-white sm:text-2xl">
-                      UNLOCK YOUR SPIN
-                    </h3>
-                    <p className="mt-0.5 font-mono text-xs text-neutral-400">
-                      Enter your details to claim your guaranteed lucky draw turn and booth voucher.
-                    </p>
-                  </div>
+                <div className="mb-5 text-center sm:text-left">
+                  <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
+                    GET YOUR VISITOR PASS
+                  </h3>
+                  <p className="mt-1 font-mono text-xs text-neutral-400">
+                    Register once in 15 seconds to unlock direct access to our platforms, products, and stall lucky draw perks.
+                  </p>
                 </div>
 
                 {errorMessage && (
@@ -354,20 +349,21 @@ export function SpinRegistrationModal({
                     )}
                   </div>
 
-                  {/* Big Cyber Submit Button */}
+                  {/* Big Cyber Submit Button matching design */}
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="relative flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] font-mono text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition disabled:opacity-50"
+                    className="relative flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-black bg-[#ccff00] font-mono text-sm sm:text-base font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition disabled:opacity-50"
                   >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        <span>VERIFYING & UNLOCKING WHEEL...</span>
+                        <span>ISSUING PASS & UNLOCKING...</span>
                       </>
                     ) : (
                       <>
-                        <span>UNLOCK SPIN & ENTER DRAW</span>
+                        <span>CLAIM PASS & UNLOCK ALL</span>
+                        <span className="font-sans text-lg font-bold">↗</span>
                         <ArrowRight className="h-4 w-4 stroke-[3]" />
                       </>
                     )}

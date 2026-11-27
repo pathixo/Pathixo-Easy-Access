@@ -470,9 +470,20 @@ export function CyberPortal() {
 
           {/* Stall Lucky Draw Card */}
           <section>
-            <Link
-              href="/spin"
-              className="group block rounded-3xl sm:rounded-[32px] border-2 border-dashed border-[#ccff00]/50 bg-[#ccff00]/5 p-5 text-center transition hover:border-[#ccff00] hover:bg-[#ccff00]/10"
+            <div
+              onClick={() => {
+                if (isRegistered) {
+                  window.location.href = "/spin";
+                } else {
+                  setModalState({
+                    isOpen: true,
+                    name: "Stall Lucky Draw",
+                    url: "/spin",
+                    category: "lucky-draw",
+                  });
+                }
+              }}
+              className="cursor-pointer group block rounded-3xl sm:rounded-[32px] border-2 border-dashed border-[#ccff00]/50 bg-[#ccff00]/5 p-5 text-center transition hover:border-[#ccff00] hover:bg-[#ccff00]/10 active:scale-[0.99]"
             >
               <div className="flex items-center justify-center gap-2.5">
                 <Sparkles className="h-5 w-5 text-[#ccff00]" />
@@ -487,7 +498,7 @@ export function CyberPortal() {
                 <span>Enter Spin & Win Arena</span>
                 <ArrowUpRight className="h-3.5 w-3.5" />
               </div>
-            </Link>
+            </div>
           </section>
 
         </main>

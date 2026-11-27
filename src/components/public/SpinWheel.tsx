@@ -178,17 +178,6 @@ export function SpinWheel() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (loadingInitial) {
-    return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#ccff00]" />
-        <p className="mt-3 font-mono text-xs text-neutral-400 uppercase tracking-wider">
-          Initializing Lucky Draw Status...
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="mx-auto max-w-md px-4 py-4 sm:px-6">
       {!reward ? (
@@ -273,11 +262,10 @@ export function SpinWheel() {
             <button
               onClick={handleCenterButtonClick}
               disabled={isSpinning}
-              className={`absolute z-30 flex h-20 w-20 flex-col items-center justify-center rounded-full border-2 transition active:scale-95 disabled:opacity-90 ${
-                !isAuthenticated
-                  ? "border-[#ccff00] bg-[#0c0d0e] text-[#ccff00] shadow-[0px_0px_20px_rgba(204,255,0,0.3)] hover:scale-105"
-                  : "border-2 border-black bg-[#ccff00] text-black shadow-cyber hover:bg-[#d9ff33]"
-              }`}
+              className={`absolute z-30 flex h-20 w-20 flex-col items-center justify-center rounded-full border-2 transition active:scale-95 disabled:opacity-90 ${!isAuthenticated
+                ? "border-[#ccff00] bg-[#0c0d0e] text-[#ccff00] shadow-[0px_0px_20px_rgba(204,255,0,0.3)] hover:scale-105"
+                : "border-2 border-black bg-[#ccff00] text-black shadow-cyber hover:bg-[#d9ff33]"
+                }`}
             >
               {isSpinning ? (
                 <>
