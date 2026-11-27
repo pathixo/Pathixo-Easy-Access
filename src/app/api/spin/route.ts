@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server";
-import { getAdminClient } from "@/lib/supabase/admin";
-import { getVisitorSession } from "@/lib/security/session";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { executeDevSpin, getDevStore } from "@/lib/dev-store";
+import { clearVisitorSessionCookie, getVisitorSession } from "@/lib/security/session";
 import { spinRateLimiter, getClientIp } from "@/lib/security/rate-limit";
 import { apiError, apiSuccess } from "@/lib/security/errors";
+import { sendVoucherEmail } from "@/lib/email/send-voucher";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +42,50 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 4. Invoke cryptographic spin_wheel RPC
+    // 4. Local Dev Mode Fallback when Supabase is not configured
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      const outcome = executeDevSpin(session.visitorId, idempotencyKey.trim());
+      if (!outcome.ok) {
+        if (outcome.error?.code === "VISITOR_NOT_FOUND") {
+          await clearVisitorSessionCookie();
+          return apiError(
+            "UNAUTHORIZED",
+            "Your session has expired. Please register again.",
+            401
+          );
+        }
+        return apiError(
+          outcome.error?.code || "SPIN_FAILED",
+          outcome.error?.message || "Unable to complete spin",
+          400
+        );
+      }
+      if (outcome.spin_id && !outcome.already_spun) {
+        const store = getDevStore();
+        const visitor = store.visitors.find((v) => v.id === session.visitorId);
+        if (visitor) {
+          sendVoucherEmail({
+            toEmail: visitor.email,
+            toName: visitor.full_name,
+            prizeName: outcome.reward_name || "Exhibition Voucher",
+            voucherCode: outcome.reward_code || "",
+            redemptionInstructions: outcome.redemption_instructions || "",
+            expiresAt: outcome.expires_at || new Date().toISOString(),
+          })
+            .then((res) => {
+              const s = store.spins.find((x) => x.id === outcome.spin_id);
+              if (s) {
+                s.email_status = res.success ? "sent" : "not_configured";
+                s.email_error = res.error || null;
+              }
+            })
+            .catch(() => {});
+        }
+      }
+      return apiSuccess(outcome);
+    }
+
+    // 5. Invoke cryptographic spin_wheel RPC
     const supabase = getAdminClient();
     const { data, error } = await supabase.rpc("spin_wheel", {
       p_visitor_id: session.visitorId,
@@ -59,10 +104,54 @@ export async function POST(req: NextRequest) {
     if (!data || data.ok === false) {
       const code = data?.error?.code || "SPIN_FAILED";
       const message = data?.error?.message || "Lucky draw allocation could not be completed.";
+
+      if (code === "VISITOR_NOT_FOUND") {
+        await clearVisitorSessionCookie();
+        return apiError(
+          "UNAUTHORIZED",
+          "Your session has expired. Please register again.",
+          401
+        );
+      }
+
       return apiError(code, message, 400);
     }
 
-    // 5. Return spin outcome
+    // 6. Asynchronously dispatch voucher delivery email without blocking user response
+    if (data.spin_id && !data.already_spun) {
+      (async () => {
+        try {
+          const { data: visitor } = await supabase
+            .from("visitors")
+            .select("full_name, email")
+            .eq("id", session.visitorId)
+            .maybeSingle();
+
+          if (visitor && visitor.email) {
+            const emailResult = await sendVoucherEmail({
+              toEmail: visitor.email,
+              toName: visitor.full_name,
+              prizeName: data.reward_name,
+              voucherCode: data.reward_code,
+              redemptionInstructions: data.redemption_instructions,
+              expiresAt: data.expires_at,
+            });
+
+            await supabase
+              .from("spins")
+              .update({
+                email_status: emailResult.success ? "sent" : "failed",
+                email_error: emailResult.error || null,
+              })
+              .eq("id", data.spin_id);
+          }
+        } catch (emailErr) {
+          console.error("Voucher email background error:", emailErr);
+        }
+      })().catch(() => {});
+    }
+
+    // 7. Return spin outcome
     return apiSuccess(data);
   } catch (err) {
     console.error("Unhandled spin endpoint error:", err);

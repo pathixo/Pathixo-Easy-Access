@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminServerClient } from "./server-client";
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { getAdminSessionFromCookie } from "./session";
 
 export type AdminRole = "super_admin" | "admin" | "viewer";
 
@@ -16,6 +17,19 @@ export interface AdminProfile {
  */
 export async function getAdminSession(): Promise<AdminProfile | null> {
   try {
+    if (await getAdminSessionFromCookie()) {
+      return {
+        id: "super-admin-local",
+        email: "admin@pathixo.local",
+        role: "super_admin",
+        full_name: "System Administrator",
+      };
+    }
+
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      return null;
+    }
+
     const supabase = createAdminServerClient();
     const {
       data: { user },
@@ -80,6 +94,21 @@ export async function logAuditEvent(
   ipAddress?: string | null
 ): Promise<void> {
   try {
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      const { getDevStore } = await import("@/lib/dev-store");
+      getDevStore().auditLogs.unshift({
+        id: crypto.randomUUID(),
+        admin_id: adminId,
+        action,
+        entity_type: entityType,
+        entity_id: entityId || null,
+        details,
+        ip_address: ipAddress || null,
+        created_at: new Date().toISOString(),
+      });
+      return;
+    }
+
     const serviceClient = getAdminClient();
     await serviceClient.from("audit_logs").insert({
       admin_id: adminId,

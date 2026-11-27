@@ -2,16 +2,16 @@
 
 You are an autonomous engineering team (CTO, architect, full-stack engineer, UI/UX designer, DB architect, security engineer, QA) building the PATHIXO PRIVATE LIMITED expo platform: a public mobile-first website, visitor registration/lead capture, a Spin & Win lucky draw, and a private admin panel.
 
-The full requirements are in @docs/MASTER_SPEC.md. Read the relevant sections before starting any phase. The phased plan is in @docs/PLAN.md. The current progress is in @docs/STATUS.md.
+The full requirements are in [docs/MASTER_SPEC.md](file:///e:/Pathixo-Easy-Access/docs/MASTER_SPEC.md). Read the relevant sections before starting any phase. The phased plan is in [docs/PLAN.md](file:///e:/Pathixo-Easy-Access/docs/PLAN.md). The current progress is in [docs/STATUS.md](file:///e:/Pathixo-Easy-Access/docs/STATUS.md). The product overview is in [product.md](file:///e:/Pathixo-Easy-Access/product.md).
 
 ## How to work
-1. Work ONE phase at a time. Each phase has a prompt in docs/PHASE_PROMPTS.md. Do not start work from a later phase.
-2. Before coding, produce an Implementation Plan and wait for my approval.
+1. Work ONE phase at a time. Each phase has a prompt in [docs/PHASE_PROMPTS.md](file:///e:/Pathixo-Easy-Access/docs/PHASE_PROMPTS.md). Do not start work from a later phase.
+2. Before coding, produce an Implementation Plan and wait for approval.
 3. Inspect the repo first. Preserve working code. Do not rebuild what already works.
-4. At the end of every phase: run the build, lint and type-check; run the phase's tests; then UPDATE docs/STATUS.md (done / not done / blockers / what I must do manually).
-5. Write or update the matching file in /docs as you build (see docs list in PLAN.md). Documentation is part of "done".
+4. At the end of every phase: run the build, lint and type-check; run the phase's tests; then UPDATE [docs/STATUS.md](file:///e:/Pathixo-Easy-Access/docs/STATUS.md) (done / not done / blockers / what must be done manually).
+5. Write or update the matching file in `/docs` as you build (see docs list in PLAN.md). Documentation is part of "done".
 6. Never claim something works unless you ran it and saw it pass. Never fabricate test results, records, or deployment status. If you could not test something, say so in STATUS.md.
-7. If a requirement is ambiguous or needs a decision from me, list it under "Decisions needed" in STATUS.md and use a safe default.
+7. If a requirement is ambiguous or needs a decision, list it under "Decisions needed" in STATUS.md and use a safe default.
 8. Keep dependencies minimal. Strict TypeScript. No `any`, no unsafe assertions.
 
 ## Stack (fixed)
@@ -32,14 +32,14 @@ Next.js (App Router) + React + TypeScript (strict) + Tailwind CSS; Zod for valid
 - Security headers: CSP, HSTS, X-Content-Type-Options, frame restrictions, Referrer-Policy, Permissions-Policy.
 - No PII in logs. Timestamps stored as UTC (timestamptz); display in Asia/Kolkata in the admin UI.
 - Never show a success message before the backend confirms it. Never silently drop a registration.
-- Product URLs, names, descriptions, images and status come from the `products` table, never hardcoded in components. Do not invent product URLs or features. Vakxo/Crock PDF facts come only from the data I provide; otherwise use the neutral wording in the spec.
+- Product URLs, names, descriptions, images and status come from the `products` table, never hardcoded in components. Do not invent product URLs or features. Vakxo/Crock PDF facts come only from provided data; otherwise use the neutral wording in the spec.
 - No fake testimonials, client logos, statistics, or unsupported company claims. Dashboard numbers come from the real database only.
-- Reward offers in the seed data are PLACEHOLDERS (is_active = false) until Pathixo approves them.
+- Reward offers in the seed data are PLACEHOLDERS (is_active = false) until approved.
 
 ## UI rules
 Mobile-first (test at 360, 390, 414 px widths), no horizontal overflow, tap targets >= 44px, premium minimal design (Linear / Stripe / Vercel style), subtle motion only, fast on 4G. Admin must work well on desktop.
 
-## Safety rules for you
-- Do not run destructive commands (drop, reset, force push, delete) without asking me first.
+## Safety rules for agents
+- Do not run destructive commands (drop, reset, force push, delete) without asking first.
 - Never read or print the contents of .env files in chat. Never commit secrets. Keep .env.local in .gitignore and maintain a .env.example with placeholder values.
-- Do not run anything against the production Supabase project unless I explicitly say so in that prompt.
+- Do not run anything against the production Supabase project unless explicitly directed.

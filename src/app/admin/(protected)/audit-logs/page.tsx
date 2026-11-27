@@ -1,7 +1,7 @@
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { getDevStore } from "@/lib/dev-store";
 import { requireAdmin } from "@/lib/admin/auth";
 import { formatKolkataTime } from "@/lib/admin/utils";
-import { History, ShieldAlert } from "lucide-react";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -13,21 +13,36 @@ export default async function AdminAuditLogsPage() {
     redirect("/admin");
   }
 
-  const supabase = getAdminClient();
+  type AuditRow = {
+    id: string;
+    action: string;
+    entity_type: string;
+    entity_id: string | null;
+    details: Record<string, unknown>;
+    ip_address: string | null;
+    created_at: string;
+  };
 
-  const { data: logs } = await supabase
-    .from("audit_logs")
-    .select(`
-      id,
-      action,
-      entity_type,
-      entity_id,
-      details,
-      ip_address,
-      created_at
-    `)
-    .order("created_at", { ascending: false })
-    .limit(50);
+  let logs: AuditRow[] = [];
+  if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+    logs = getDevStore().auditLogs.slice(0, 50);
+  } else {
+    const supabase = getAdminClient();
+    const { data } = await supabase
+      .from("audit_logs")
+      .select(`
+        id,
+        action,
+        entity_type,
+        entity_id,
+        details,
+        ip_address,
+        created_at
+      `)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    logs = (data || []) as AuditRow[];
+  }
 
   return (
     <div className="space-y-6 max-w-6xl">

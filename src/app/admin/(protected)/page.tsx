@@ -1,43 +1,80 @@
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { getDevStore } from "@/lib/dev-store";
 import { formatKolkataTime } from "@/lib/admin/utils";
-import { Users, MessageSquare, Gift, CheckCircle, TrendingUp, Sparkles } from "lucide-react";
+import { Users, MessageSquare, Gift, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-  const supabase = getAdminClient();
+  let totalVisitors = 0;
+  let totalInquiries = 0;
+  let totalSpins = 0;
+  let totalRedeemed = 0;
+  let recentVisitors: Array<{
+    id: string;
+    full_name: string;
+    email: string;
+    mobile: string;
+    interested_product: string | null;
+    created_at: string;
+  }> = [];
+  let productTally: Record<string, number> = {};
 
-  // 1. Fetch real counts in parallel
-  const [
-    { count: visitorCount },
-    { count: inquiryCount },
-    { count: spinCount },
-    { count: redeemedCount },
-    { data: recentVisitors },
-    { data: productInterestStats },
-  ] = await Promise.all([
-    supabase.from("visitors").select("*", { count: "exact", head: true }),
-    supabase.from("business_inquiries").select("*", { count: "exact", head: true }),
-    supabase.from("spins").select("*", { count: "exact", head: true }),
-    supabase.from("spins").select("*", { count: "exact", head: true }).eq("redemption_status", "redeemed"),
-    supabase.from("visitors").select("id, full_name, email, mobile, interested_product, created_at").order("created_at", { ascending: false }).limit(6),
-    supabase.from("visitors").select("interested_product"),
-  ]);
+  if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+    const store = getDevStore();
+    totalVisitors = store.visitors.length;
+    totalInquiries = store.inquiries.length;
+    totalSpins = store.spins.length;
+    totalRedeemed = store.spins.filter((s) => s.redemption_status === "redeemed").length;
+    recentVisitors = store.visitors.slice(0, 6).map((v) => ({
+      id: v.id,
+      full_name: v.full_name,
+      email: v.email,
+      mobile: v.mobile,
+      interested_product: null,
+      created_at: v.created_at,
+    }));
+    productTally = store.visitors.reduce<Record<string, number>>((acc) => {
+      acc["General"] = (acc["General"] || 0) + 1;
+      return acc;
+    }, {});
+  } else {
+    const supabase = getAdminClient();
+    const [
+      { count: visitorCount },
+      { count: inquiryCount },
+      { count: spinCount },
+      { count: redeemedCount },
+      { data: recentRows },
+      { data: productInterestStats },
+    ] = await Promise.all([
+      supabase.from("visitors").select("*", { count: "exact", head: true }),
+      supabase.from("business_inquiries").select("*", { count: "exact", head: true }),
+      supabase.from("spins").select("*", { count: "exact", head: true }),
+      supabase.from("spins").select("*", { count: "exact", head: true }).eq("redemption_status", "redeemed"),
+      supabase
+        .from("visitors")
+        .select("id, full_name, email, mobile, interested_product, created_at")
+        .order("created_at", { ascending: false })
+        .limit(6),
+      supabase.from("visitors").select("interested_product"),
+    ]);
 
-  const totalVisitors = visitorCount || 0;
-  const totalInquiries = inquiryCount || 0;
-  const totalSpins = spinCount || 0;
-  const totalRedeemed = redeemedCount || 0;
+    totalVisitors = visitorCount || 0;
+    totalInquiries = inquiryCount || 0;
+    totalSpins = spinCount || 0;
+    totalRedeemed = redeemedCount || 0;
+    recentVisitors = (recentRows || []) as typeof recentVisitors;
+    productTally = (productInterestStats || []).reduce<Record<string, number>>((acc, item) => {
+      const key = (item.interested_product as string | null) || "General";
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+  }
+
   const conversionRate = totalVisitors > 0 ? ((totalInquiries / totalVisitors) * 100).toFixed(1) : "0";
   const redemptionRate = totalSpins > 0 ? ((totalRedeemed / totalSpins) * 100).toFixed(1) : "0";
-
-  // Product interest aggregation
-  const productTally: Record<string, number> = {};
-  productInterestStats?.forEach((item) => {
-    const key = item.interested_product || "General";
-    productTally[key] = (productTally[key] || 0) + 1;
-  });
 
   return (
     <div className="space-y-8 max-w-6xl">

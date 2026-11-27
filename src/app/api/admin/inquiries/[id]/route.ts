@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireAdmin, logAuditEvent } from "@/lib/admin/auth";
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { getDevStore } from "@/lib/dev-store";
 import { apiError, apiSuccess } from "@/lib/security/errors";
 
 export const dynamic = "force-dynamic";
@@ -19,11 +20,21 @@ export async function PATCH(
       return apiError("INVALID_STATUS", "Invalid lead status.", 400);
     }
 
-    const serviceClient = getAdminClient();
     const updateData: Record<string, unknown> = {};
     if (body.lead_status) updateData.lead_status = body.lead_status;
     if (body.notes !== undefined) updateData.notes = body.notes;
 
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      const store = getDevStore();
+      const inquiry = store.inquiries.find((i) => i.id === inquiryId);
+      if (!inquiry) return apiError("NOT_FOUND", "Inquiry not found.", 404);
+      if (body.lead_status) inquiry.lead_status = body.lead_status;
+      if (body.notes !== undefined) inquiry.notes = body.notes;
+      await logAuditEvent(admin.id, "update_inquiry", "business_inquiries", inquiryId, { changes: updateData }, req.headers.get("x-forwarded-for"));
+      return apiSuccess(inquiry);
+    }
+
+    const serviceClient = getAdminClient();
     const { data: updated, error } = await serviceClient
       .from("business_inquiries")
       .update(updateData)

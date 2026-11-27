@@ -1,16 +1,48 @@
 import { NextRequest } from "next/server";
 import { createAdminServerClient } from "@/lib/admin/server-client";
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { isSuperAdminCredential, setAdminSessionCookie } from "@/lib/admin/session";
+import { adminLoginRateLimiter, getClientIp } from "@/lib/security/rate-limit";
 import { apiError, apiSuccess } from "@/lib/security/errors";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const clientIp = getClientIp(req);
+    const rateCheck = await adminLoginRateLimiter.limit(clientIp);
+    if (!rateCheck.success) {
+      return apiError(
+        "RATE_LIMITED",
+        "Too many login attempts. Please wait a moment and try again.",
+        429
+      );
+    }
+
+    const body = await req.json();
+    const email = String(body?.email ?? body?.username ?? "").trim();
+    const password = String(body?.password ?? "");
 
     if (!email || !password) {
-      return apiError("MISSING_CREDENTIALS", "Email and password are required.", 400);
+      return apiError("MISSING_CREDENTIALS", "Username/email and password are required.", 400);
+    }
+
+    // Built-in super admin credentials for booth operations.
+    if (isSuperAdminCredential(email, password)) {
+      await setAdminSessionCookie();
+      return apiSuccess({
+        admin: {
+          id: "super-admin-local",
+          email: "admin@pathixo.local",
+          role: "super_admin",
+          full_name: "System Administrator",
+        },
+      });
+    }
+
+    // Dev/no-Supabase mode: allow local access so the dashboard can be tested.
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      return apiError("INVALID_CREDENTIALS", "Invalid username or password.", 401);
     }
 
     const supabase = createAdminServerClient();

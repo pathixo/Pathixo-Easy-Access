@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, logAuditEvent } from "@/lib/admin/auth";
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { getDevStore } from "@/lib/dev-store";
 import { buildCsv, formatKolkataTime } from "@/lib/admin/utils";
 
 export const dynamic = "force-dynamic";
@@ -8,39 +9,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   try {
     const admin = await requireAdmin(["super_admin", "admin"]);
-    const serviceClient = getAdminClient();
 
-    // Fetch all leads with their spin data
-    const { data: leads, error } = await serviceClient
-      .from("visitors")
-      .select(`
-        id,
-        full_name,
-        email,
-        mobile,
-        company,
-        designation,
-        interested_product,
-        privacy_consent,
-        privacy_consent_at,
-        marketing_consent,
-        utm_source,
-        utm_campaign,
-        created_at,
-        spins (
-          reward_code,
-          redemption_status,
-          redeemed_at,
-          rewards (name)
-        )
-      `)
-      .order("created_at", { ascending: false });
-
-    if (error || !leads) {
-      return NextResponse.json({ ok: false, error: "Failed to fetch leads" }, { status: 500 });
-    }
-
-    // Headers
     const headers = [
       "Visitor ID",
       "Full Name",
@@ -61,40 +30,97 @@ export async function GET(req: NextRequest) {
       "Redeemed Time (IST)",
     ];
 
-    // Rows with CSV injection escape
-    const rows = leads.map((v) => {
-      const spin = (Array.isArray(v.spins) ? v.spins[0] : v.spins) as {
-        reward_code?: string;
-        redemption_status?: string;
-        redeemed_at?: string;
-        rewards?: { name?: string } | { name?: string }[];
-      } | null;
+    let rows: (string | number | boolean | null | undefined)[][] = [];
 
-      const rewardData = spin?.rewards;
-      const rewardName = Array.isArray(rewardData)
-        ? rewardData[0]?.name
-        : rewardData?.name || "None";
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      const store = getDevStore();
+      rows = store.visitors.map((v) => {
+        const spin = store.spins.find((s) => s.visitor_id === v.id);
+        const reward = spin ? store.rewards.find((r) => r.id === spin.reward_id) : null;
+        return [
+          v.id,
+          v.full_name,
+          v.email,
+          v.mobile,
+          "N/A",
+          "N/A",
+          "General",
+          "YES",
+          "—",
+          "NO",
+          "direct",
+          "none",
+          formatKolkataTime(v.created_at),
+          spin?.reward_code || "Not Spun",
+          reward?.name || spin?.prize_label || "None",
+          spin?.redemption_status || "N/A",
+          formatKolkataTime(spin?.redeemed_at),
+        ];
+      });
+    } else {
+      const serviceClient = getAdminClient();
+      const { data: leads, error } = await serviceClient
+        .from("visitors")
+        .select(`
+          id,
+          full_name,
+          email,
+          mobile,
+          company,
+          designation,
+          interested_product,
+          privacy_consent,
+          privacy_consent_at,
+          marketing_consent,
+          utm_source,
+          utm_campaign,
+          created_at,
+          spins (
+            reward_code,
+            redemption_status,
+            redeemed_at,
+            rewards (name)
+          )
+        `)
+        .order("created_at", { ascending: false });
 
-      return [
-        v.id,
-        v.full_name,
-        v.email,
-        v.mobile,
-        v.company || "N/A",
-        v.designation || "N/A",
-        v.interested_product || "General",
-        v.privacy_consent ? "YES" : "NO",
-        formatKolkataTime(v.privacy_consent_at),
-        v.marketing_consent ? "YES" : "NO",
-        v.utm_source || "direct",
-        v.utm_campaign || "none",
-        formatKolkataTime(v.created_at),
-        spin?.reward_code || "Not Spun",
-        rewardName || "None",
-        spin?.redemption_status || "N/A",
-        formatKolkataTime(spin?.redeemed_at),
-      ];
-    });
+      if (error || !leads) {
+        return NextResponse.json({ ok: false, error: "Failed to fetch leads" }, { status: 500 });
+      }
+
+      rows = leads.map((v) => {
+        const spin = (Array.isArray(v.spins) ? v.spins[0] : v.spins) as {
+          reward_code?: string;
+          redemption_status?: string;
+          redeemed_at?: string;
+          rewards?: { name?: string } | { name?: string }[];
+        } | null;
+        const rewardData = spin?.rewards;
+        const rewardName = Array.isArray(rewardData) ? rewardData[0]?.name : rewardData?.name || "None";
+
+        return [
+          v.id,
+          v.full_name,
+          v.email,
+          v.mobile,
+          v.company || "N/A",
+          v.designation || "N/A",
+          v.interested_product || "General",
+          v.privacy_consent ? "YES" : "NO",
+          formatKolkataTime(v.privacy_consent_at),
+          v.marketing_consent ? "YES" : "NO",
+          v.utm_source || "direct",
+          v.utm_campaign || "none",
+          formatKolkataTime(v.created_at),
+          spin?.reward_code || "Not Spun",
+          rewardName || "None",
+          spin?.redemption_status || "N/A",
+          formatKolkataTime(spin?.redeemed_at),
+        ];
+      });
+    }
+
+
 
     const csvContent = buildCsv(headers, rows);
 

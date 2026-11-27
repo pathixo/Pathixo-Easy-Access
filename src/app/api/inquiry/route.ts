@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
-import { getAdminClient } from "@/lib/supabase/admin";
+import crypto from "crypto";
+import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { getDevStore } from "@/lib/dev-store";
 import { inquirySchema } from "@/lib/validation";
 import { inquiryRateLimiter, getClientIp } from "@/lib/security/rate-limit";
 import { verifyTurnstileToken } from "@/lib/security/turnstile";
@@ -48,6 +50,28 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Insert into business_inquiries
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      const store = getDevStore();
+      store.inquiries.unshift({
+        id: crypto.randomUUID(),
+        full_name: data.full_name,
+        email: data.email,
+        mobile: data.mobile,
+        company: data.company || null,
+        service_needed: data.service_needed || null,
+        project_description: data.project_description,
+        estimated_budget: data.estimated_budget || null,
+        lead_status: "new",
+        notes: null,
+        created_at: new Date().toISOString(),
+      });
+      return apiSuccess({ submitted: true, dev_mode: true });
+    }
+
+    if (!isSupabaseConfigured()) {
+      return apiError("SERVICE_UNAVAILABLE", "Inquiry service is not configured.", 503);
+    }
+
     const supabase = getAdminClient();
     const { error } = await supabase.from("business_inquiries").insert({
       full_name: data.full_name,
