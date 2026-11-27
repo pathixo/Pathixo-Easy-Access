@@ -11,7 +11,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const admin = await requireAdmin(["super_admin", "admin"]);
+    const admin = await requireAdmin(["super_admin"]);
     const rewardId = params.id;
     const body = await req.json();
 

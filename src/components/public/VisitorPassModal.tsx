@@ -43,6 +43,7 @@ export function VisitorPassModal({
   const [turnstileToken, setTurnstileToken] = useState<string>(
     process.env.NODE_ENV !== "production" ? "1x00000000000000000000AA" : ""
   );
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   const {
     register,
@@ -91,6 +92,8 @@ export function VisitorPassModal({
 
       if (!res.ok || !data.ok) {
         setErrorMessage(data?.error?.message || "Registration failed. Please check your details.");
+        setTurnstileToken("");
+        setTurnstileResetKey((k) => k + 1);
         return;
       }
 
@@ -105,6 +108,8 @@ export function VisitorPassModal({
       onRegisterSuccess?.(resolvedName);
     } catch {
       setErrorMessage("Network error. Please try again.");
+      setTurnstileToken("");
+      setTurnstileResetKey((k) => k + 1);
     } finally {
       setIsSubmitting(false);
     }
@@ -298,7 +303,11 @@ export function VisitorPassModal({
                   )}
 
                   {/* Cloudflare Turnstile */}
-                  <TurnstileWidget onVerify={setTurnstileToken} className="pt-1" />
+                  <TurnstileWidget
+                    onVerify={setTurnstileToken}
+                    resetKey={turnstileResetKey}
+                    className="pt-1"
+                  />
 
                   {/* Big Cyber Submit Button */}
                   <button

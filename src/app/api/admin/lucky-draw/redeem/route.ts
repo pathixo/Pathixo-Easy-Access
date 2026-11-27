@@ -77,21 +77,42 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Mark as redeemed
+    // 3. Mark as redeemed atomically
     const now = new Date().toISOString();
     const { data: updated, error: updateErr } = await serviceClient
       .from("spins")
       .update({
         redemption_status: "redeemed",
+        fulfillment_status: "redeemed_at_booth",
         redeemed_at: now,
         redeemed_by: admin.id,
       })
       .eq("id", spinRecord.id)
+      .eq("redemption_status", "not_redeemed")
       .select()
-      .single();
+      .maybeSingle();
 
     if (updateErr) {
       return apiError("DATABASE_ERROR", "Failed to update redemption status.", 500);
+    }
+
+    if (!updated) {
+      const { data: latest } = await serviceClient
+        .from("spins")
+        .select("redemption_status, redeemed_at")
+        .eq("id", spinRecord.id)
+        .maybeSingle();
+
+      if (latest?.redemption_status === "redeemed") {
+        return apiError(
+          "ALREADY_REDEEMED",
+          `This voucher was already marked redeemed on ${latest.redeemed_at}`,
+          400,
+          { spinRecord }
+        );
+      }
+
+      return apiError("REDEEM_CONFLICT", "Voucher could not be redeemed. Please retry.", 409);
     }
 
     // 4. Log audit event

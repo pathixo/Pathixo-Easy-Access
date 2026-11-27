@@ -1,10 +1,17 @@
+import { redirect } from "next/navigation";
 import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
 import { getDevStore } from "@/lib/dev-store";
+import { requireAdmin } from "@/lib/admin/auth";
 import { PrizePoolManager, RewardItem } from "@/components/admin/PrizePoolManager";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminRewardsPage() {
+  try {
+    await requireAdmin(["super_admin"]);
+  } catch {
+    redirect("/admin");
+  }
   let rewards: RewardItem[] = [];
   let loadError: string | null = null;
 

@@ -94,6 +94,17 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      const conflict = store.visitors.find(
+        (v) => v.mobile === data.mobile || v.email.toLowerCase() === data.email.toLowerCase()
+      );
+      if (conflict) {
+        return apiError(
+          "DUPLICATE_REGISTRATION",
+          "This phone number or email address has already been registered. Please visit our stall team if you need assistance.",
+          409
+        );
+      }
+
       const newId = crypto.randomUUID();
       store.visitors.unshift({
         id: newId,
