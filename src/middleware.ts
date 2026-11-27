@@ -26,13 +26,14 @@ export function middleware(req: NextRequest) {
       return res;
     }
 
-    // Check for Supabase session cookies (sb-*-auth-token)
+    // Check for built-in admin session or Supabase session cookies.
     const allCookies = req.cookies.getAll();
-    const hasAuthCookie = allCookies.some(
+    const hasAdminSession = allCookies.some((c) => c.name === "px_admin_session");
+    const hasSupabaseAuthCookie = allCookies.some(
       (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token")
     );
 
-    if (!hasAuthCookie) {
+    if (!hasAdminSession && !hasSupabaseAuthCookie) {
       const loginUrl = new URL("/admin/login", req.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);

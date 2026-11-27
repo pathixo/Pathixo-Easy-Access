@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminServerClient } from "./server-client";
 import { getAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
+import { getAdminSessionFromCookie } from "./session";
 
 export type AdminRole = "super_admin" | "admin" | "viewer";
 
@@ -16,13 +17,17 @@ export interface AdminProfile {
  */
 export async function getAdminSession(): Promise<AdminProfile | null> {
   try {
-    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+    if (await getAdminSessionFromCookie()) {
       return {
-        id: "dev-admin-local",
-        email: "admin@pathixo.com",
+        id: "super-admin-local",
+        email: "admin@pathixo.local",
         role: "super_admin",
         full_name: "System Administrator",
       };
+    }
+
+    if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
+      return null;
     }
 
     const supabase = createAdminServerClient();

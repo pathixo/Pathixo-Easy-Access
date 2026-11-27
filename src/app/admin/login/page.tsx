@@ -6,7 +6,7 @@ import { Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -20,7 +20,7 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/admin/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await res.json();
@@ -60,15 +60,15 @@ export default function AdminLoginPage() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-neutral-300">Admin Email</label>
+            <label className="block text-xs font-medium text-neutral-300">Username</label>
             <div className="relative mt-1">
               <Mail className="absolute left-3.5 top-3 h-4 w-4 text-neutral-500" />
               <input
-                type="email"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@pathixo.com"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Adminji12"
                 className="h-11 w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3.5 text-xs text-white placeholder-neutral-500 focus:border-brand-500 focus:outline-none"
               />
             </div>
