@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
-import { Sparkles, Copy, Check, AlertCircle, ArrowLeft, Loader2, Gift } from "lucide-react";
+import { Sparkles, Copy, Check, AlertCircle, Loader2, Gift, Lock, ArrowRight } from "lucide-react";
+import { SpinRegistrationModal } from "./SpinRegistrationModal";
 
 interface RewardData {
   spin_id: string;
@@ -18,41 +19,42 @@ interface RewardData {
 }
 
 const SEGMENTS = [
-  { label: "15% Off Dev", slug: "discount-15-custom-dev", color: "#0c87eb" },
-  { label: "AI Consultation", slug: "free-ai-consultation", color: "#1e293b" },
-  { label: "Thank You Pass", slug: "thank-you-pass", color: "#0284c7" },
-  { label: "₹10K Credit", slug: "credit-10k-cloud", color: "#0f172a" },
-  { label: "Tech Swag", slug: "exclusive-merchandise", color: "#2563eb" },
-  { label: "Architecture Review", slug: "free-ai-consultation", color: "#1e293b" },
-  { label: "Special Pass", slug: "thank-you-pass", color: "#0284c7" },
-  { label: "Cloud Voucher", slug: "credit-10k-cloud", color: "#0f172a" },
+  { label: "15% Off Dev", slug: "discount-15-custom-dev", color: "#141619" },
+  { label: "AI Consultation", slug: "free-ai-consultation", color: "#1c222b" },
+  { label: "Special Pass", slug: "thank-you-pass", color: "#141619" },
+  { label: "₹10K Credit", slug: "credit-10k-cloud", color: "#1c222b" },
+  { label: "Tech Swag", slug: "exclusive-merchandise", color: "#141619" },
+  { label: "Arch Review", slug: "free-ai-consultation", color: "#1c222b" },
+  { label: "Booth Voucher", slug: "thank-you-pass", color: "#141619" },
+  { label: "Cloud Credit", slug: "credit-10k-cloud", color: "#1c222b" },
 ];
 
 export function SpinWheel() {
   const [loadingInitial, setLoadingInitial] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [registeredVisitorName, setRegisteredVisitorName] = useState<string | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
-  const [unauthorized, setUnauthorized] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [rotation, setRotation] = useState(0);
   const [reward, setReward] = useState<RewardData | null>(null);
   const [copied, setCopied] = useState(false);
   const wheelRef = useRef<HTMLDivElement>(null);
 
-  // 1. Check existing spin on mount
+  // 1. Check existing session and spin status on load
   useEffect(() => {
     async function checkExisting() {
       try {
         const res = await fetch("/api/spin/result");
         if (res.status === 401) {
-          try {
-            localStorage.removeItem("px_visitor_registered");
-            localStorage.removeItem("px_visitor_name");
-          } catch {}
-          setUnauthorized(true);
+          // Unregistered visitor - wheel remains visible in gated teaser mode
+          setIsAuthenticated(false);
           return;
         }
 
         const json = await res.json();
+        setIsAuthenticated(true);
+
         if (json.ok && json.data) {
           const d = json.data;
           setReward({
@@ -61,7 +63,7 @@ export function SpinWheel() {
             reward_name: d.reward?.name || "Exhibition Voucher",
             reward_slug: d.reward?.slug || "thank-you-pass",
             reward_type: d.reward?.reward_type || "no_prize",
-            reward_description: d.reward?.description || "Thank you for visiting Pathixo at Expo Mart!",
+            reward_description: d.reward?.description || "Thank you for visiting Pathixo at our booth!",
             reward_code: d.reward_code,
             expires_at: d.expires_at,
             redemption_instructions:
@@ -69,7 +71,7 @@ export function SpinWheel() {
           });
         }
       } catch {
-        // Continue to allow spin attempt
+        // Fallback to allow gated interaction
       } finally {
         setLoadingInitial(false);
       }
@@ -77,7 +79,28 @@ export function SpinWheel() {
     checkExisting();
   }, []);
 
-  // 2. Spin Handler
+  // 2. Center Button Click Router
+  const handleCenterButtonClick = () => {
+    if (isSpinning || reward) return;
+
+    if (!isAuthenticated) {
+      // Trigger Lead Capture Modal first
+      setIsModalOpen(true);
+      return;
+    }
+
+    // Authenticated: Execute spin
+    handleSpin();
+  };
+
+  // 3. Callback on Successful Registration from Modal
+  const handleRegistrationSuccess = (visitorName: string) => {
+    setIsAuthenticated(true);
+    setRegisteredVisitorName(visitorName);
+    setIsModalOpen(false);
+  };
+
+  // 4. Spin Handler
   const handleSpin = async () => {
     if (isSpinning || reward) return;
 
@@ -101,12 +124,9 @@ export function SpinWheel() {
       });
 
       if (res.status === 401) {
-        try {
-          localStorage.removeItem("px_visitor_registered");
-          localStorage.removeItem("px_visitor_name");
-        } catch {}
-        setUnauthorized(true);
+        setIsAuthenticated(false);
         setIsSpinning(false);
+        setIsModalOpen(true);
         return;
       }
 
@@ -123,33 +143,30 @@ export function SpinWheel() {
       let targetIndex = SEGMENTS.findIndex((s) => s.slug === outcome.reward_slug);
       if (targetIndex === -1) targetIndex = 2;
 
-      // Calculate target angle
-      // 8 segments = 45 deg per segment. The pointer is at top (270 deg or 0 deg).
+      // 8 segments = 45 deg per segment
       const segmentAngle = 360 / SEGMENTS.length;
-      // Center of target segment
       const segmentCenter = targetIndex * segmentAngle + segmentAngle / 2;
-      // To bring target segment to top pointer:
-      const totalTurns = 5; // 5 full rotations
+      const totalTurns = 5;
       const targetDegree = totalTurns * 360 + (360 - segmentCenter);
 
       setRotation(targetDegree);
 
-      // Wait for CSS animation to finish (4.5s)
+      // 4.5s ease-out animation wait
       setTimeout(() => {
         setIsSpinning(false);
         setReward(outcome);
-        // Clear stored key on success
         sessionStorage.removeItem("px_spin_idempotency");
 
-        // Confetti burst
+        // High-energy confetti burst
         confetti({
-          particleCount: 100,
-          spread: 70,
+          particleCount: 120,
+          spread: 80,
           origin: { y: 0.6 },
+          colors: ["#ccff00", "#ffffff", "#3b82f6", "#10b981"],
         });
       }, 4500);
     } catch {
-      setErrorMessage("Network timeout while spinning. Please tap Spin again to retry with your saved key.");
+      setErrorMessage("Network timeout while spinning. Tap Spin again to retry with your saved key.");
       setIsSpinning(false);
     }
   };
@@ -164,60 +181,48 @@ export function SpinWheel() {
   if (loadingInitial) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-400" />
-        <p className="mt-3 text-xs text-neutral-400">Loading Lucky Draw status...</p>
-      </div>
-    );
-  }
-
-  if (unauthorized) {
-    return (
-      <div className="mx-auto max-w-md rounded-3xl border border-white/10 bg-[#121218] p-8 text-center shadow-2xl">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
-          <AlertCircle className="h-7 w-7" />
-        </div>
-        <h2 className="mt-4 text-xl font-bold text-white">Registration Required</h2>
-        <p className="mt-2 text-xs text-neutral-400 leading-relaxed">
-          The Lucky Draw is exclusively available to verified exhibition attendees. Please register your visit to unlock your spin.
+        <Loader2 className="h-8 w-8 animate-spin text-[#ccff00]" />
+        <p className="mt-3 font-mono text-xs text-neutral-400 uppercase tracking-wider">
+          Initializing Lucky Draw Status...
         </p>
-        <Link
-          href="/?register=true"
-          className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 font-semibold text-xs text-white transition hover:bg-brand-500"
-        >
-          <span>Register Now</span>
-        </Link>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-md px-4 py-4 sm:px-6">
       {!reward ? (
         <div className="text-center">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-xs font-semibold text-brand-300">
+          {/* Top Status Pill */}
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-[#ccff00]/30 bg-[#ccff00]/10 px-3.5 py-1 font-mono text-[11px] font-bold text-[#ccff00] uppercase tracking-wider">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>One Guaranteed Reward Per Visitor</span>
+            <span>Guaranteed Prize For Registered Visitors</span>
           </div>
 
-          <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-            Spin & Win Lucky Draw
+          <h1 className="mt-3 text-3xl font-black uppercase tracking-tight text-white sm:text-4xl">
+            SPIN & WIN <span className="text-[#ccff00]">LUCKY DRAW</span>
           </h1>
-          <p className="mt-1 text-xs text-neutral-400">
-            Tap the center button to spin. Your outcome is cryptographically generated on our server.
+
+          <p className="mt-1 font-mono text-xs text-neutral-400">
+            {isAuthenticated
+              ? registeredVisitorName
+                ? `Welcome, ${registeredVisitorName}! Tap the center to spin.`
+                : "Your entry is verified! Tap the center to spin."
+              : "Tap the center button to enter your details & unlock your spin."}
           </p>
 
           {errorMessage && (
-            <div className="mt-4 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
+            <div className="mt-4 flex items-center gap-2 rounded-xl border border-red-500/40 bg-red-950/40 p-3 text-xs text-red-300">
               <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
               <span>{errorMessage}</span>
             </div>
           )}
 
-          {/* SVG Wheel Container (fits 320px effortlessly on 360px screens) */}
-          <div className="relative mx-auto mt-8 flex h-[310px] w-[310px] items-center justify-center">
-            {/* Pointer Marker (Top) */}
-            <div className="absolute -top-3 z-20 flex flex-col items-center">
-              <div className="h-0 w-0 border-x-8 border-x-transparent border-t-[16px] border-t-brand-400 drop-shadow-md" />
+          {/* SVG Wheel Container (300px, 100% responsive on 360px phones) */}
+          <div className="relative mx-auto mt-7 flex h-[310px] w-[310px] items-center justify-center">
+            {/* Top Pointer Indicator */}
+            <div className="absolute -top-3.5 z-20 flex flex-col items-center">
+              <div className="h-0 w-0 border-x-[10px] border-x-transparent border-t-[18px] border-t-[#ccff00] drop-shadow-[0px_4px_8px_rgba(204,255,0,0.5)]" />
             </div>
 
             {/* Rotating Wheel Body */}
@@ -227,7 +232,7 @@ export function SpinWheel() {
                 transform: `rotate(${rotation}deg)`,
                 transition: isSpinning ? "transform 4.5s cubic-bezier(0.15, 0.9, 0.25, 1.0)" : "none",
               }}
-              className="h-[300px] w-[300px] rounded-full border-4 border-white/20 shadow-2xl relative overflow-hidden"
+              className="h-[300px] w-[300px] rounded-full border-4 border-[#252a31] shadow-[0px_0px_30px_rgba(0,0,0,0.8)] relative overflow-hidden bg-[#0c0d0e]"
             >
               <svg viewBox="0 0 100 100" className="h-full w-full">
                 {SEGMENTS.map((seg, i) => {
@@ -244,14 +249,15 @@ export function SpinWheel() {
 
                   return (
                     <g key={i}>
-                      <path d={pathData} fill={seg.color} stroke="#09090b" strokeWidth="0.5" />
+                      <path d={pathData} fill={seg.color} stroke="#252a31" strokeWidth="0.6" />
                       {/* Segment Text */}
                       <text
                         x="50"
-                        y="18"
+                        y="17"
                         fill="#f4f4f5"
-                        fontSize="3.6"
+                        fontSize="3.4"
                         fontWeight="bold"
+                        fontFamily="monospace"
                         textAnchor="middle"
                         transform={`rotate(${startAngle + angle / 2}, 50, 50)`}
                       >
@@ -263,77 +269,119 @@ export function SpinWheel() {
               </svg>
             </div>
 
-            {/* Center Spin Button */}
+            {/* Center Hub / Dynamic Action Button */}
             <button
-              onClick={handleSpin}
+              onClick={handleCenterButtonClick}
               disabled={isSpinning}
-              className="absolute z-30 flex h-20 w-20 flex-col items-center justify-center rounded-full border-2 border-white/30 bg-[#09090b] text-white shadow-xl transition active:scale-95 hover:border-brand-400 disabled:opacity-80"
+              className={`absolute z-30 flex h-20 w-20 flex-col items-center justify-center rounded-full border-2 transition active:scale-95 disabled:opacity-90 ${
+                !isAuthenticated
+                  ? "border-[#ccff00] bg-[#0c0d0e] text-[#ccff00] shadow-[0px_0px_20px_rgba(204,255,0,0.3)] hover:scale-105"
+                  : "border-2 border-black bg-[#ccff00] text-black shadow-cyber hover:bg-[#d9ff33]"
+              }`}
             >
-              <Sparkles className="h-4 w-4 text-brand-400" />
-              <span className="text-[11px] font-extrabold uppercase tracking-wider">
-                {isSpinning ? "..." : "SPIN"}
-              </span>
+              {isSpinning ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span className="font-mono text-[9px] font-black uppercase mt-0.5">SPINNING</span>
+                </>
+              ) : !isAuthenticated ? (
+                <>
+                  <Lock className="h-4 w-4 animate-pulse text-[#ccff00]" />
+                  <span className="font-mono text-[9px] font-black uppercase tracking-wider mt-0.5">
+                    UNLOCK
+                  </span>
+                  <span className="font-mono text-[7px] text-neutral-400 uppercase">1 TAP</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 stroke-[3]" />
+                  <span className="font-mono text-[10px] font-black uppercase tracking-wider mt-0.5">
+                    SPIN!
+                  </span>
+                </>
+              )}
             </button>
+          </div>
+
+          {/* Under-Wheel Explainer Banner */}
+          <div className="mt-8 rounded-2xl border border-[#252a31] bg-[#141619] p-4 text-left font-mono text-xs text-neutral-300">
+            <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#ccff00] pb-2 border-b border-[#252a31]">
+              <span>{"// FAIR ALLOCATION GUARANTEE"}</span>
+              <span>1 SPIN / VISITOR</span>
+            </div>
+            <p className="mt-2 text-neutral-400 leading-relaxed text-[11px]">
+              {isAuthenticated
+                ? "Your entry is active. Tap the center button above to trigger server-side prize determination."
+                : "Tap the center UNLOCK button to enter your name & phone number. Your turn will be instantly reserved."}
+            </p>
           </div>
         </div>
       ) : (
         /* Reward Voucher Card */
-        <div className="rounded-3xl border border-brand-500/30 bg-gradient-to-b from-[#161622] to-[#101016] p-6 text-center shadow-2xl sm:p-8">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20">
+        <div className="rounded-3xl border-2 border-[#ccff00] bg-[#121417] p-6 text-center shadow-[0px_0px_30px_rgba(204,255,0,0.15)] sm:p-8">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#ccff00] bg-[#ccff00]/10 text-[#ccff00] shadow-[0px_0px_20px_rgba(204,255,0,0.3)]">
             <Gift className="h-7 w-7" />
           </div>
 
-          <span className="mt-3 inline-block rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-0.5 text-xs font-semibold text-emerald-400">
-            Reward Verified & Assigned
+          <span className="mt-4 inline-block rounded-full border border-[#ccff00]/40 bg-[#ccff00]/10 px-3 py-1 font-mono text-[11px] font-bold text-[#ccff00] uppercase">
+            {"// PRIZE VERIFIED & ASSIGNED"}
           </span>
 
-          <h2 className="mt-3 text-xl font-extrabold text-white sm:text-2xl">
+          <h2 className="mt-2 text-2xl font-black uppercase tracking-tight text-white sm:text-3xl">
             {reward.reward_name}
           </h2>
 
-          <p className="mt-2 text-xs text-neutral-300 leading-relaxed sm:text-sm">
+          <p className="mt-2 font-mono text-xs text-neutral-300 leading-relaxed">
             {reward.reward_description}
           </p>
 
-          {/* Unique Voucher Code Box */}
-          <div className="mt-6 rounded-2xl border border-dashed border-brand-500/40 bg-brand-950/20 p-4">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-brand-400">
-              Your Exclusive Voucher Code
+          {/* Unique Voucher Code Display */}
+          <div className="mt-6 rounded-2xl border-2 border-dashed border-[#ccff00]/60 bg-[#0c0d0e] p-4">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#ccff00]">
+              YOUR STALL REDEMPTION CODE
             </span>
-            <div className="mt-1 flex items-center justify-center gap-3">
-              <span className="font-mono text-2xl font-extrabold tracking-widest text-white sm:text-3xl">
+            <div className="mt-2 flex items-center justify-center gap-3">
+              <span className="font-mono text-2xl font-black tracking-widest text-white sm:text-3xl">
                 {reward.reward_code}
               </span>
               <button
                 onClick={copyCode}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-neutral-300 transition hover:bg-white/20 active:scale-95"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-700 bg-neutral-900 text-neutral-300 transition hover:border-[#ccff00] hover:text-[#ccff00] active:scale-95"
                 title="Copy code"
               >
-                {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                {copied ? <Check className="h-4 w-4 text-[#ccff00]" /> : <Copy className="h-4 w-4" />}
               </button>
             </div>
-            {copied && <p className="mt-1 text-[11px] text-emerald-400">Copied to clipboard!</p>}
+            {copied && <p className="mt-1 font-mono text-[11px] text-[#ccff00]">Copied to clipboard!</p>}
           </div>
 
           {/* Redemption Instructions */}
-          <div className="mt-6 rounded-xl border border-white/5 bg-white/5 p-3.5 text-left text-xs text-neutral-400">
-            <span className="font-semibold text-neutral-200">How to Redeem:</span>
-            <p className="mt-1 leading-relaxed">{reward.redemption_instructions}</p>
+          <div className="mt-5 rounded-xl border border-[#252a31] bg-[#141619] p-3.5 text-left font-mono text-xs text-neutral-300">
+            <span className="font-bold text-[#ccff00] uppercase text-[10px]">Stall Redemption Instructions:</span>
+            <p className="mt-1 leading-relaxed text-[11px] text-neutral-300">{reward.redemption_instructions}</p>
             <p className="mt-2 text-[10px] text-neutral-500">
               Valid until: {new Date(reward.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
             </p>
           </div>
 
-          <div className="mt-6 flex flex-col gap-2.5">
+          <div className="mt-6">
             <Link
               href="/"
-              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-brand-600 font-semibold text-xs text-white transition hover:bg-brand-500"
+              className="flex h-13 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] font-mono text-xs font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] transition"
             >
-              <span>Explore Products & Services</span>
+              <span>RETURN TO PATHIXO PORTAL</span>
+              <ArrowRight className="h-4 w-4 stroke-[3]" />
             </Link>
           </div>
         </div>
       )}
+
+      {/* Embedded Lead-Capture Gatekeeper Modal */}
+      <SpinRegistrationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={handleRegistrationSuccess}
+      />
     </div>
   );
 }
