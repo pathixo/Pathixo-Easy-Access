@@ -245,9 +245,25 @@ export function CyberPortal() {
               <span className="font-mono text-xs font-bold tracking-widest text-neutral-400 uppercase">
                 {"// OFFICIAL PLATFORMS & PRODUCTS"}
               </span>
-              <span className="font-mono text-[11px] text-[#ccff00] uppercase">
-                {isRegistered ? "1-TAP DIRECT ACCESS" : "CHECK-IN TO UNLOCK"}
-              </span>
+              {!isRegistered ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalState({
+                      isOpen: true,
+                      name: "Stall Visitor Check-In",
+                      url: siteConfig.company.website,
+                    });
+                  }}
+                  className="font-mono text-[11px] text-[#ccff00] uppercase underline underline-offset-2 hover:opacity-80 active:scale-95 transition cursor-pointer"
+                >
+                  CHECK-IN TO UNLOCK
+                </button>
+              ) : (
+                <span className="font-mono text-[11px] text-[#ccff00] uppercase">
+                  1-TAP DIRECT ACCESS
+                </span>
+              )}
             </div>
 
             <div className="space-y-3.5">

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import { Sparkles, Copy, Check, AlertCircle, Loader2, Gift, Lock, ArrowRight } from "lucide-react";
-import { SpinRegistrationModal } from "./SpinRegistrationModal";
+import { VisitorPassModal } from "./VisitorPassModal";
 
 interface RewardData {
   spin_id: string;
@@ -214,14 +214,15 @@ export function SpinWheel() {
               <div className="h-0 w-0 border-x-[10px] border-x-transparent border-t-[18px] border-t-[#ccff00] drop-shadow-[0px_4px_8px_rgba(204,255,0,0.5)]" />
             </div>
 
-            {/* Rotating Wheel Body */}
+            {/* Rotating Wheel Body (Clickable to unlock or spin) */}
             <div
               ref={wheelRef}
+              onClick={handleCenterButtonClick}
               style={{
                 transform: `rotate(${rotation}deg)`,
                 transition: isSpinning ? "transform 4.5s cubic-bezier(0.15, 0.9, 0.25, 1.0)" : "none",
               }}
-              className="h-[300px] w-[300px] rounded-full border-4 border-[#252a31] shadow-[0px_0px_30px_rgba(0,0,0,0.8)] relative overflow-hidden bg-[#0c0d0e]"
+              className="h-[300px] w-[300px] rounded-full border-4 border-[#252a31] shadow-[0px_0px_30px_rgba(0,0,0,0.8)] relative overflow-hidden bg-[#0c0d0e] cursor-pointer"
             >
               <svg viewBox="0 0 100 100" className="h-full w-full">
                 {SEGMENTS.map((seg, i) => {
@@ -263,7 +264,7 @@ export function SpinWheel() {
               onClick={handleCenterButtonClick}
               disabled={isSpinning}
               className={`absolute z-30 flex h-20 w-20 flex-col items-center justify-center rounded-full border-2 transition active:scale-95 disabled:opacity-90 ${!isAuthenticated
-                ? "border-[#ccff00] bg-[#0c0d0e] text-[#ccff00] shadow-[0px_0px_20px_rgba(204,255,0,0.3)] hover:scale-105"
+                ? "border-[#ccff00] bg-[#0c0d0e] text-[#ccff00] shadow-[0px_0px_20px_rgba(204,255,0,0.4)] hover:scale-105"
                 : "border-2 border-black bg-[#ccff00] text-black shadow-cyber hover:bg-[#d9ff33]"
                 }`}
             >
@@ -291,16 +292,51 @@ export function SpinWheel() {
             </button>
           </div>
 
+          {/* Prominent Action Button under Wheel for Guaranteed Touch Target */}
+          <div className="mt-7">
+            {!isAuthenticated ? (
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-black bg-[#ccff00] font-mono text-sm sm:text-base font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 transition"
+              >
+                <Lock className="h-4 w-4 stroke-[2.5]" />
+                <span>UNLOCK LUCKY DRAW SPIN</span>
+                <ArrowRight className="h-4 w-4 stroke-[3]" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSpin}
+                disabled={isSpinning}
+                className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-black bg-[#ccff00] font-mono text-sm sm:text-base font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 transition disabled:opacity-60"
+              >
+                {isSpinning ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>SPINNING THE WHEEL...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-5 w-5 stroke-[2.5]" />
+                    <span>SPIN THE WHEEL NOW!</span>
+                    <ArrowRight className="h-4 w-4 stroke-[3]" />
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+
           {/* Under-Wheel Explainer Banner */}
-          <div className="mt-8 rounded-2xl border border-[#252a31] bg-[#141619] p-4 text-left font-mono text-xs text-neutral-300">
+          <div className="mt-6 rounded-2xl border border-[#252a31] bg-[#141619] p-4 text-left font-mono text-xs text-neutral-300">
             <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#ccff00] pb-2 border-b border-[#252a31]">
               <span>{"// FAIR ALLOCATION GUARANTEE"}</span>
               <span>1 SPIN / VISITOR</span>
             </div>
             <p className="mt-2 text-neutral-400 leading-relaxed text-[11px]">
               {isAuthenticated
-                ? "Your entry is active. Tap the center button above to trigger server-side prize determination."
-                : "Tap the center UNLOCK button to enter your name & phone number. Your turn will be instantly reserved."}
+                ? "Your entry is active. Tap the center button above or 'SPIN THE WHEEL NOW!' to take your turn."
+                : "Tap 'UNLOCK LUCKY DRAW SPIN' to fill your details once in 15 seconds. Your turn will be instantly unlocked."}
             </p>
           </div>
         </div>
@@ -364,11 +400,19 @@ export function SpinWheel() {
         </div>
       )}
 
-      {/* Embedded Lead-Capture Gatekeeper Modal */}
-      <SpinRegistrationModal
+      {/* Exact 1:1 Visitor Pass Modal from Screenshot */}
+      <VisitorPassModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={handleRegistrationSuccess}
+        onRegisterSuccess={(name) => {
+          setIsAuthenticated(true);
+          setRegisteredVisitorName(name);
+        }}
+        targetDestination={{
+          name: "Stall Lucky Draw",
+          url: "/spin",
+          category: "lucky-draw",
+        }}
       />
     </div>
   );

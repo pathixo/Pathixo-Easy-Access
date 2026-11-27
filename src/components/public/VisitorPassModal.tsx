@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -37,6 +37,14 @@ export function VisitorPassModal({
   const [isSuccess, setIsSuccess] = useState(false);
   const [registeredName, setRegisteredName] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Always reset success and errors whenever modal is opened
+  useEffect(() => {
+    if (isOpen) {
+      setIsSuccess(false);
+      setErrorMessage(null);
+    }
+  }, [isOpen]);
 
   const defaultProduct = targetDestination?.name?.toLowerCase().includes("vakxo")
     ? "vakxo"
@@ -85,7 +93,6 @@ export function VisitorPassModal({
           try {
             const checkSession = await fetch("/api/spin/result");
             if (checkSession.status !== 401) {
-              // Valid session cookie is present, preserve success behavior
               const name = values.full_name || "Valued Visitor";
               setRegisteredName(name);
               setIsSuccess(true);
@@ -109,7 +116,7 @@ export function VisitorPassModal({
         return;
       }
 
-      const name = values.full_name;
+      const name = data?.data?.visitor_name || values.full_name;
       setRegisteredName(name);
       setIsSuccess(true);
       try {
@@ -119,9 +126,11 @@ export function VisitorPassModal({
       onRegisterSuccess?.(name);
 
       if (targetDestination?.url === "/spin") {
-        setTimeout(() => {
-          window.location.href = "/spin";
-        }, 400);
+        if (typeof window !== "undefined" && window.location.pathname !== "/spin") {
+          setTimeout(() => {
+            window.location.href = "/spin";
+          }, 400);
+        }
       }
     } catch {
       setErrorMessage("Network error. Please try again.");
@@ -355,24 +364,40 @@ export function VisitorPassModal({
 
                 {/* Primary Destination Action */}
                 <div className="mt-6 space-y-3">
-                  <button
-                    type="button"
-                    onClick={handleFinish}
-                    className="flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] font-mono text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition"
-                  >
-                    <ShieldCheck className="h-5 w-5 stroke-[2.5]" />
-                    <span>EXPLORE PATHIXO HUB ↗</span>
-                  </button>
+                  {targetDestination?.url === "/spin" ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSuccess(false);
+                        onClose();
+                      }}
+                      className="flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] font-mono text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition"
+                    >
+                      <Sparkles className="h-5 w-5 stroke-[2.5]" />
+                      <span>SPIN THE WHEEL NOW ↗</span>
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleFinish}
+                        className="flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ccff00] font-mono text-sm font-black uppercase text-black shadow-cyber hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition"
+                      >
+                        <ShieldCheck className="h-5 w-5 stroke-[2.5]" />
+                        <span>EXPLORE {targetDestination?.name ? targetDestination.name.toUpperCase() : "PATHIXO HUB"} ↗</span>
+                      </button>
 
-                  {/* Lucky Draw Turn Button */}
-                  <Link
-                    href="/spin"
-                    onClick={onClose}
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#252a31] bg-[#141619] font-mono text-xs font-bold uppercase text-[#ccff00] hover:border-[#ccff00] transition"
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    <span>PLAY STALL LUCKY DRAW (SPIN & WIN)</span>
-                  </Link>
+                      {/* Lucky Draw Turn Button */}
+                      <Link
+                        href="/spin"
+                        onClick={onClose}
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#252a31] bg-[#141619] font-mono text-xs font-bold uppercase text-[#ccff00] hover:border-[#ccff00] transition"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        <span>PLAY STALL LUCKY DRAW (SPIN & WIN)</span>
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
             )}
