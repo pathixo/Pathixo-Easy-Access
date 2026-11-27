@@ -1,9 +1,17 @@
 /** @type {import('next').NextConfig} */
 
+const isDev = process.env.NODE_ENV !== "production";
+
+// In development, Next.js requires 'unsafe-eval' for Hot Module Replacement and React Refresh runtime.
+// In production, 'unsafe-eval' is strictly excluded.
+const scriptSrc = isDev
+  ? "'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com"
+  : "'self' 'unsafe-inline' https://challenges.cloudflare.com";
+
 // Strict Content Security Policy allowing only trusted origins
 const cspHeader = `
   default-src 'self' https://*.supabase.co;
-  script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com;
+  script-src ${scriptSrc};
   style-src 'self' 'unsafe-inline';
   img-src 'self' data: https: blob:;
   font-src 'self' data:;

@@ -183,7 +183,7 @@ export function CyberPortal() {
                   {siteConfig.company.brandName}
                 </span>
                 <span className="hidden sm:inline-block font-mono text-[10px] text-neutral-400">
-                  {"// PRIVATE LIMITED"}
+                  PRIVATE LIMITED
                 </span>
               </div>
             </div>
@@ -243,11 +243,27 @@ export function CyberPortal() {
           <section className="space-y-4">
             <div className="flex items-center justify-between px-2">
               <span className="font-mono text-xs font-bold tracking-widest text-neutral-400 uppercase">
-                {"// OFFICIAL PLATFORMS & PRODUCTS"}
+                OFFICIAL PLATFORMS & PRODUCTS
               </span>
-              <span className="font-mono text-[11px] text-[#ccff00] uppercase">
-                {isRegistered ? "1-TAP DIRECT ACCESS" : "CHECK-IN TO UNLOCK"}
-              </span>
+              {!isRegistered ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalState({
+                      isOpen: true,
+                      name: "Stall Visitor Check-In",
+                      url: siteConfig.company.website,
+                    });
+                  }}
+                  className="font-mono text-[11px] text-[#ccff00] uppercase underline underline-offset-2 hover:opacity-80 active:scale-95 transition cursor-pointer"
+                >
+                  CHECK-IN TO UNLOCK
+                </button>
+              ) : (
+                <span className="font-mono text-[11px] text-[#ccff00] uppercase">
+                  1-TAP DIRECT ACCESS
+                </span>
+              )}
             </div>
 
             <div className="space-y-3.5">
@@ -399,7 +415,7 @@ export function CyberPortal() {
           {/* Social Platforms (Uniform Pill-shaped Buttons) */}
           <section className="space-y-3">
             <div className="font-mono text-xs font-bold tracking-widest text-neutral-400 uppercase px-2">
-              {"// CONNECT ON SOCIAL"}
+              CONNECT ON SOCIAL
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -470,9 +486,20 @@ export function CyberPortal() {
 
           {/* Stall Lucky Draw Card */}
           <section>
-            <Link
-              href="/spin"
-              className="group block rounded-3xl sm:rounded-[32px] border-2 border-dashed border-[#ccff00]/50 bg-[#ccff00]/5 p-5 text-center transition hover:border-[#ccff00] hover:bg-[#ccff00]/10"
+            <div
+              onClick={() => {
+                if (isRegistered) {
+                  window.location.href = "/spin";
+                } else {
+                  setModalState({
+                    isOpen: true,
+                    name: "Stall Lucky Draw",
+                    url: "/spin",
+                    category: "lucky-draw",
+                  });
+                }
+              }}
+              className="cursor-pointer group block rounded-3xl sm:rounded-[32px] border-2 border-dashed border-[#ccff00]/50 bg-[#ccff00]/5 p-5 text-center transition hover:border-[#ccff00] hover:bg-[#ccff00]/10 active:scale-[0.99]"
             >
               <div className="flex items-center justify-center gap-2.5">
                 <Sparkles className="h-5 w-5 text-[#ccff00]" />
@@ -487,7 +514,7 @@ export function CyberPortal() {
                 <span>Enter Spin & Win Arena</span>
                 <ArrowUpRight className="h-3.5 w-3.5" />
               </div>
-            </Link>
+            </div>
           </section>
 
         </main>
