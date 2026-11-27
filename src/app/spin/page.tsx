@@ -4,8 +4,8 @@ import { SpinWheel } from "@/components/public/SpinWheel";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Spin & Win Lucky Draw — Pathixo Trade Show",
-  description: "Participate in Pathixo's exclusive trade show lucky draw and win Vakxo Pro subscriptions, tech swag, and engineering vouchers.",
+  title: "Spin & Win Lucky Draw — Pathixo Expo 2026",
+  description: "Participate in Pathixo's exclusive expo lucky draw and win Vakxo Pro subscriptions, tech swag, and engineering vouchers.",
 };
 
 export default function SpinPage() {
@@ -29,7 +29,7 @@ export default function SpinPage() {
           <div className="inline-flex items-center gap-2 rounded-full border border-[#ccff00]/30 bg-[#ccff00]/10 px-3 py-1">
             <span className="h-2 w-2 animate-pulse rounded-full bg-[#ccff00]" />
             <span className="font-mono text-[10px] font-bold tracking-wider text-[#ccff00] uppercase">
-              MEERUT TRADE SHOW 2026
+              PATHIXO EXPO 2026
             </span>
           </div>
         </div>

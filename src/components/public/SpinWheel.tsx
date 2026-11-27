@@ -235,7 +235,7 @@ export function SpinWheel() {
           setReward({
             spin_id: d.spin_id,
             reward_id: d.reward?.id,
-            reward_name: d.reward?.name || "Trade Show Voucher",
+            reward_name: d.reward?.name || "Exclusive Expo Voucher",
             display_label: d.reward?.display_label || d.reward?.name,
             reward_slug: d.reward?.slug || "vip-expo-pass",
             reward_type: d.reward?.reward_type || "no_prize",
@@ -532,7 +532,7 @@ export function SpinWheel() {
           <p className="mt-1.5 font-mono text-xs text-neutral-400">
             {unauthorized
               ? "Enter your details below to unlock your guaranteed turn."
-              : "Tap the center SPIN button to claim your trade show voucher."}
+              : "Tap the center SPIN button to claim your exclusive expo voucher."}
           </p>
 
           {errorMessage && (

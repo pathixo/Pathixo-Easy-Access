@@ -5,7 +5,7 @@
 > **Company:** PATHIXO PRIVATE LIMITED  
 > **Target Platform:** Mobile-First Web Application (QR-Accessed at Expos & Summits)  
 > **Primary Purpose:** Instant On-Ground Event Hub, Lead Capture & User Acquisition for Pathixo  
-> **Active Event:** Meerut Trade Show 2026 (Pathixo Technology Pavilion)  
+> **Active Event:** Pathixo Expo 2026 (Pathixo Technology Pavilion)  
 > **Production URL:** `https://expo.pathixo.com`  
 > **Last Updated:** November 2026  
 

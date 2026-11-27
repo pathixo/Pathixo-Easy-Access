@@ -60,7 +60,7 @@ export function CyberPortal() {
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[#ccff00]" />
               </span>
               <span className="font-mono text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#ccff00]">
-                MEERUT TRADE SHOW 2026
+                PATHIXO EXPO 2026
               </span>
             </div>
           </div>
@@ -98,10 +98,6 @@ export function CyberPortal() {
               <p className="text-neutral-200">
                 We design and engineer high-performance web, mobile, and cloud solutions that help visionary enterprises scale and succeed.
               </p>
-              <div className="mt-3 flex items-center justify-center sm:justify-start gap-2 text-xs text-neutral-400 border-t border-neutral-800/80 pt-3">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#ccff00]" />
-                <span>Live booth connection at <strong className="text-white font-medium">Meerut Trade Show 2026</strong></span>
-              </div>
             </div>
           </section>
 
@@ -413,7 +409,7 @@ export function CyberPortal() {
           </div>
 
           <div className="text-[11px] text-neutral-500 font-mono">
-            Exhibition Pavilion: Meerut Trade Show Ground • Pathixo Booth
+            Pathixo Technology Pavilion • Official Booth
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 font-mono text-xs text-neutral-500 pt-3 border-t border-[#1a1e24]">

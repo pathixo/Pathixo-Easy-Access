@@ -43,7 +43,7 @@ export async function sendVoucherEmail({
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Pathixo Trade Show Voucher</title>
+  <title>Your Pathixo Expo Voucher</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #0a0b0c; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #f4f4f5;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 580px; margin: 40px auto; background-color: #101214; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; overflow: hidden;">
@@ -51,7 +51,7 @@ export async function sendVoucherEmail({
       <td style="padding: 28px 32px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
         <div style="display: inline-block; background-color: #ccff00; color: #0a0b0c; font-weight: 900; font-size: 16px; width: 36px; height: 36px; line-height: 36px; border-radius: 8px; margin-bottom: 10px;">◆</div>
         <h1 style="margin: 0; font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: 0.05em;">PATHIXO PRIVATE LIMITED</h1>
-        <p style="margin: 6px 0 0; font-size: 11px; font-family: monospace; color: #ccff00;">MEERUT TRADE SHOW 2026 • LUCKY DRAW PASS</p>
+        <p style="margin: 6px 0 0; font-size: 11px; font-family: monospace; color: #ccff00;">PATHIXO EXPO 2026 • LUCKY DRAW PASS</p>
       </td>
     </tr>
 
@@ -82,7 +82,7 @@ export async function sendVoucherEmail({
 
     <tr>
       <td style="padding: 20px 32px; background-color: #0a0b0c; border-top: 1px solid rgba(255, 255, 255, 0.08); text-align: center; font-size: 11px; color: #71717a;">
-        <p style="margin: 0;">PATHIXO PRIVATE LIMITED • Digital Trade Show Pavilion</p>
+        <p style="margin: 0;">PATHIXO PRIVATE LIMITED • Digital Expo Pavilion</p>
       </td>
     </tr>
   </table>

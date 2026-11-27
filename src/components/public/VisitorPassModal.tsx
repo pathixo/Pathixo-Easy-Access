@@ -161,7 +161,7 @@ export function VisitorPassModal({
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-[#ccff00] animate-pulse" />
                 <span className="font-mono text-[10px] sm:text-[11px] font-semibold tracking-wider text-[#ccff00] uppercase">
-                  {"// MEERUT TRADE SHOW • DIGITAL VISITOR PASS"}
+                  {"// PATHIXO EXPO • DIGITAL VISITOR PASS"}
                 </span>
               </div>
               <button
@@ -180,7 +180,7 @@ export function VisitorPassModal({
                     UNLOCK {dest.name}
                   </h3>
                   <p className="mt-0.5 font-mono text-[11px] sm:text-xs text-neutral-400 leading-snug">
-                    Quick 15-second pass registration for live booth visitors at Meerut Trade Show.
+                    Quick 15-second pass registration for live booth visitors.
                   </p>
                 </div>
 
@@ -350,7 +350,7 @@ export function VisitorPassModal({
                     WELCOME, {registeredName}!
                   </h3>
                   <p className="mt-1 font-mono text-xs text-neutral-400">
-                    Your visitor credentials have been verified at Meerut Trade Show.
+                    Your visitor credentials have been verified.
                   </p>
 
                   {existingVoucherCode && (

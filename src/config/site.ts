@@ -13,7 +13,7 @@ export const siteConfig = {
     website: "https://pathixo.com/",
     email: "founder@pathixo.com",
     gmailComposeUrl:
-      "https://mail.google.com/mail/?view=cm&fs=1&to=founder@pathixo.com&su=Inquiry%20from%20Meerut%20Trade%20Show%202026&body=Hello%20Pathixo%20Team,%0A%0AI%20connected%20with%20you%20at%20the%20Meerut%20Trade%20Show%202026%20and%20would%20like%20to%20learn%20more%20about%20your%20services.",
+      "https://mail.google.com/mail/?view=cm&fs=1&to=founder@pathixo.com&su=Inquiry%20from%20Pathixo%20Expo&body=Hello%20Pathixo%20Team,%0A%0AI%20connected%20with%20you%20at%20the%20Pathixo%20Expo%20and%20would%20like%20to%20learn%20more%20about%20your%20services.",
     phone: "+91 9711015569",
     displayPhone: "+91 97110 15569",
     linkedIn: "https://www.linkedin.com/company/pathixopvtltd/",
@@ -45,11 +45,11 @@ export const siteConfig = {
     },
   },
   expo: {
-    eventName: "Meerut Trade Show 2026",
-    venue: "Meerut Trade Show Ground",
+    eventName: "Pathixo Expo 2026",
+    venue: "Pathixo Technology Pavilion",
     dates: "2026",
     booth: "Pathixo Technology Pavilion",
-    campaignId: "meerut_trade_show_2026",
+    campaignId: "pathixo_expo_2026",
   },
   navigation: [
     { label: "Products", href: "#products" },
