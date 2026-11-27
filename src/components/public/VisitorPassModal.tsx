@@ -53,13 +53,14 @@ export function VisitorPassModal({
       interested_product: targetDestination.name.toLowerCase().includes("vakxo")
         ? "vakxo"
         : targetDestination.name.toLowerCase().includes("kroc")
-        ? "kroc-pdf"
-        : "all",
+          ? "kroc-pdf"
+          : "all",
     },
   });
 
   const onSubmit = async (values: FormInputs) => {
-    if (!turnstileToken) {
+    const token = turnstileToken || (process.env.NODE_ENV !== "production" ? "1x00000000000000000000AA" : "");
+    if (!token) {
       setErrorMessage("Please complete the security challenge before proceeding.");
       return;
     }
@@ -70,7 +71,7 @@ export function VisitorPassModal({
     try {
       const payload = {
         ...values,
-        turnstile_token: turnstileToken,
+        turnstile_token: token,
         utm_source: utm.utm_source || "meerut_trade_show",
         utm_medium: utm.utm_medium || "qr_kiosk",
         utm_campaign: utm.utm_campaign || "expo_2026",

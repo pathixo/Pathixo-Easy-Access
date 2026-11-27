@@ -111,29 +111,34 @@ export function PrizePoolManager({ initialRewards }: PrizePoolManagerProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#252a31] pb-3">
         <div>
-          <h2 className="text-base font-bold text-white">Prize Pool & Odds Configuration</h2>
-          <p className="text-xs text-neutral-400">
-            Edit probabilities, stock limits, and winner caps live during the exhibition.
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#ccff00]">
+            {"// DYNAMIC PRIZE ENGINE"}
+          </span>
+          <h2 className="text-base font-black uppercase tracking-tight text-white">
+            Prize Pool & Odds Configuration
+          </h2>
+          <p className="font-mono text-xs text-neutral-400">
+            Tune probability weights, stock caps, and winner limits live. Selection is cryptographically atomic.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 font-mono text-xs text-[#ccff00]">
-            Active Probability Weight: <strong>{totalActiveWeight}</strong>
+          <span className="rounded-xl border border-[#ccff00]/30 bg-[#ccff00]/10 px-3.5 py-1.5 font-mono text-xs font-bold text-[#ccff00]">
+            Active Weight: <strong>{totalActiveWeight}</strong>
           </span>
         </div>
       </div>
 
       {successMsg && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-300">
-          <Check className="h-4 w-4 shrink-0 text-emerald-400" />
+        <div className="flex items-center gap-2 rounded-xl border border-[#ccff00]/30 bg-[#ccff00]/10 p-3 font-mono text-xs text-[#ccff00]">
+          <Check className="h-4 w-4 shrink-0 text-[#ccff00]" />
           <span>{successMsg}</span>
         </div>
       )}
 
       {errorMsg && (
-        <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300">
+        <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 font-mono text-xs text-red-300">
           <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
           <span>{errorMsg}</span>
         </div>
@@ -150,29 +155,29 @@ export function PrizePoolManager({ initialRewards }: PrizePoolManagerProps) {
           return (
             <div
               key={r.id}
-              className={`rounded-xl border p-4 flex flex-col justify-between transition ${
+              className={`rounded-2xl border-2 p-4 flex flex-col justify-between transition ${
                 r.is_active
-                  ? "border-white/[0.08] bg-[#121218] hover:border-[#ccff00]/40"
-                  : "border-white/[0.04] bg-[#0c0c10] opacity-65"
+                  ? "border-[#252a31] bg-[#101214] hover:border-[#ccff00]/60 shadow-cyber-sm"
+                  : "border-[#1e2227] bg-[#0c0d0e] opacity-60"
               }`}
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <div className="truncate">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-500 block">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 block truncate">
                       {r.slug}
                     </span>
-                    <h3 className="text-xs font-bold text-white truncate" title={r.name}>
+                    <h3 className="text-sm font-bold text-white truncate" title={r.name}>
                       {r.name}
                     </h3>
                   </div>
 
                   <button
                     onClick={() => handleToggleActive(r)}
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold transition shrink-0 ${
+                    className={`rounded-full px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider transition shrink-0 ${
                       r.is_active
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
-                        : "bg-neutral-500/10 text-neutral-400 border border-neutral-500/20 hover:bg-neutral-500/20"
+                        ? "bg-[#ccff00]/10 text-[#ccff00] border border-[#ccff00]/40 hover:bg-[#ccff00]/20"
+                        : "bg-neutral-800 text-neutral-400 border border-neutral-700 hover:bg-neutral-700"
                     }`}
                   >
                     {r.is_active ? "Active" : "Paused"}
@@ -180,28 +185,28 @@ export function PrizePoolManager({ initialRewards }: PrizePoolManagerProps) {
                 </div>
 
                 {isCapped && (
-                  <div className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5">
-                    <ShieldAlert className="h-3 w-3" />
-                    <span>Hard-Cap Reached ({r.claimed_count}/{r.max_cap})</span>
+                  <div className="mt-2.5 flex items-center gap-1.5 font-mono text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-lg px-2 py-1">
+                    <ShieldAlert className="h-3.5 w-3.5" />
+                    <span>CAP REACHED ({r.claimed_count}/{r.max_cap})</span>
                   </div>
                 )}
 
                 {r.max_cap && !isCapped ? (
-                  <p className="mt-1 text-[10px] text-[#ccff00] font-mono">
+                  <p className="mt-1.5 font-mono text-[10px] font-bold text-[#ccff00]">
                     Hard-Cap: Max {r.max_cap} winners ({r.claimed_count || 0} won)
                   </p>
                 ) : null}
 
-                <p className="mt-2 text-[11px] text-neutral-400 line-clamp-2 leading-relaxed">
+                <p className="mt-2 font-mono text-[11px] text-neutral-400 line-clamp-2 leading-relaxed">
                   {r.description}
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-white/[0.04]">
-                <div className="flex items-center justify-between text-[11px]">
+              <div className="mt-4 pt-3 border-t border-[#252a31]">
+                <div className="flex items-center justify-between font-mono text-[11px]">
                   <div>
                     <span className="text-neutral-500">Weight: </span>
-                    <span className="font-bold text-white">{r.probability_weight}</span>
+                    <span className="font-bold text-[#ccff00]">{r.probability_weight}</span>
                     <span className="text-neutral-400"> ({oddsPct}%)</span>
                   </div>
                   <div>
@@ -214,10 +219,10 @@ export function PrizePoolManager({ initialRewards }: PrizePoolManagerProps) {
 
                 <button
                   onClick={() => setEditingReward(r)}
-                  className="mt-3 flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] text-[11px] font-medium text-neutral-200 transition hover:border-[#ccff00]/50 hover:text-[#ccff00]"
+                  className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-[#252a31] bg-[#141619] font-mono text-xs font-bold text-white transition hover:border-[#ccff00] hover:text-[#ccff00]"
                 >
-                  <Edit3 className="h-3 w-3" />
-                  <span>Edit Prize & Odds</span>
+                  <Edit3 className="h-3.5 w-3.5" />
+                  <span>EDIT PRIZE & ODDS</span>
                 </button>
               </div>
             </div>
@@ -226,48 +231,53 @@ export function PrizePoolManager({ initialRewards }: PrizePoolManagerProps) {
       </div>
 
       {editingReward && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#121218] p-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
+          <div className="w-full max-w-lg rounded-2xl border-2 border-[#252a31] bg-[#101214] p-6 shadow-cyber">
+            <div className="flex items-center justify-between border-b border-[#252a31] pb-3">
               <div>
-                <h3 className="text-base font-bold text-white">Edit Prize Configuration</h3>
-                <p className="text-xs text-neutral-400">Slug: <code>{editingReward.slug}</code></p>
+                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#ccff00]">
+                  {"// EDIT PRIZE HUD"}
+                </span>
+                <h3 className="text-base font-black uppercase tracking-tight text-white">
+                  Prize Configuration
+                </h3>
+                <p className="font-mono text-xs text-neutral-400">Slug: <code className="text-[#ccff00]">{editingReward.slug}</code></p>
               </div>
               <button
                 onClick={() => setEditingReward(null)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:text-white"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#252a31] text-neutral-400 hover:border-white hover:text-white"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEdit} className="mt-4 space-y-3.5 max-h-[75vh] overflow-y-auto pr-1 text-xs">
+            <form onSubmit={handleSaveEdit} className="mt-4 space-y-3.5 max-h-[75vh] overflow-y-auto pr-1 text-xs font-mono">
               <div>
-                <label className="block text-neutral-300 font-medium">Prize Full Name</label>
+                <label className="block text-neutral-300 font-bold uppercase">Prize Full Name</label>
                 <input
                   type="text"
                   value={editingReward.name}
                   onChange={(e) => setEditingReward({ ...editingReward, name: e.target.value })}
-                  className="mt-1 h-9 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 text-white focus:border-[#ccff00] focus:outline-none"
+                  className="mt-1 h-10 w-full rounded-xl border border-[#252a31] bg-[#0c0d0e] px-3 text-white focus:border-[#ccff00] focus:outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-neutral-300 font-medium">Display Label (Wheel Segment Text)</label>
+                <label className="block text-neutral-300 font-bold uppercase">Display Label (Wheel Segment)</label>
                 <input
                   type="text"
                   value={editingReward.display_label || ""}
                   onChange={(e) => setEditingReward({ ...editingReward, display_label: e.target.value })}
                   placeholder="e.g. 1-Yr Vakxo Pro"
-                  className="mt-1 h-9 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 text-white focus:border-[#ccff00] focus:outline-none"
+                  className="mt-1 h-10 w-full rounded-xl border border-[#252a31] bg-[#0c0d0e] px-3 text-white focus:border-[#ccff00] focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-300 font-medium">
-                    Probability Weight (Odds)
+                  <label className="block text-neutral-300 font-bold uppercase">
+                    Probability Weight
                   </label>
                   <input
                     type="number"
@@ -279,14 +289,14 @@ export function PrizePoolManager({ initialRewards }: PrizePoolManagerProps) {
                         probability_weight: Math.max(0, parseInt(e.target.value) || 0),
                       })
                     }
-                    className="mt-1 h-9 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 text-white focus:border-[#ccff00] focus:outline-none"
+                    className="mt-1 h-10 w-full rounded-xl border border-[#252a31] bg-[#0c0d0e] px-3 text-white focus:border-[#ccff00] focus:outline-none"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-neutral-300 font-medium">
-                    Strict Hard-Cap (Max Winners)
+                  <label className="block text-neutral-300 font-bold uppercase">
+                    Hard-Cap (Max Winners)
                   </label>
                   <input
                     type="number"
@@ -299,14 +309,14 @@ export function PrizePoolManager({ initialRewards }: PrizePoolManagerProps) {
                       })
                     }
                     placeholder="Empty = unlimited"
-                    className="mt-1 h-9 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 text-white focus:border-[#ccff00] focus:outline-none"
+                    className="mt-1 h-10 w-full rounded-xl border border-[#252a31] bg-[#0c0d0e] px-3 text-white focus:border-[#ccff00] focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-300 font-medium">Remaining Inventory</label>
+                  <label className="block text-neutral-300 font-bold uppercase">Remaining Inventory</label>
                   <input
                     type="number"
                     min="0"
@@ -317,12 +327,12 @@ export function PrizePoolManager({ initialRewards }: PrizePoolManagerProps) {
                         remaining_inventory: Math.max(0, parseInt(e.target.value) || 0),
                       })
                     }
-                    className="mt-1 h-9 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 text-white focus:border-[#ccff00] focus:outline-none"
+                    className="mt-1 h-10 w-full rounded-xl border border-[#252a31] bg-[#0c0d0e] px-3 text-white focus:border-[#ccff00] focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-neutral-300 font-medium">Total Inventory</label>
+                  <label className="block text-neutral-300 font-bold uppercase">Total Inventory</label>
                   <input
                     type="number"
                     min="0"
@@ -333,67 +343,67 @@ export function PrizePoolManager({ initialRewards }: PrizePoolManagerProps) {
                         total_inventory: Math.max(0, parseInt(e.target.value) || 0),
                       })
                     }
-                    className="mt-1 h-9 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 text-white focus:border-[#ccff00] focus:outline-none"
+                    className="mt-1 h-10 w-full rounded-xl border border-[#252a31] bg-[#0c0d0e] px-3 text-white focus:border-[#ccff00] focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-neutral-300 font-medium">Prize Description</label>
+                <label className="block text-neutral-300 font-bold uppercase">Prize Description</label>
                 <textarea
                   rows={2}
                   value={editingReward.description}
                   onChange={(e) => setEditingReward({ ...editingReward, description: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.04] p-2.5 text-white focus:border-[#ccff00] focus:outline-none"
+                  className="mt-1 w-full rounded-xl border border-[#252a31] bg-[#0c0d0e] p-2.5 text-white focus:border-[#ccff00] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-neutral-300 font-medium">Redemption Instructions</label>
+                <label className="block text-neutral-300 font-bold uppercase">Redemption Instructions</label>
                 <textarea
                   rows={2}
                   value={editingReward.redemption_instructions}
                   onChange={(e) =>
                     setEditingReward({ ...editingReward, redemption_instructions: e.target.value })
                   }
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.04] p-2.5 text-white focus:border-[#ccff00] focus:outline-none"
+                  className="mt-1 w-full rounded-xl border border-[#252a31] bg-[#0c0d0e] p-2.5 text-white focus:border-[#ccff00] focus:outline-none"
                 />
               </div>
 
               <div className="flex items-center gap-2 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer select-none">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={editingReward.is_active}
                     onChange={(e) =>
                       setEditingReward({ ...editingReward, is_active: e.target.checked })
                     }
-                    className="h-4 w-4 rounded border-white/20 bg-white/10 accent-[#ccff00]"
+                    className="h-4 w-4 rounded border-[#252a31] bg-[#0c0d0e] accent-[#ccff00]"
                   />
-                  <span className="text-neutral-300">Prize is Active in Live Wheel Pool</span>
+                  <span className="text-neutral-300 font-bold">Prize is Active in Live Wheel Pool</span>
                 </label>
               </div>
 
-              <div className="mt-5 flex justify-end gap-2.5 border-t border-white/10 pt-4">
+              <div className="mt-5 flex justify-end gap-3 border-t border-[#252a31] pt-4">
                 <button
                   type="button"
                   onClick={() => setEditingReward(null)}
-                  className="h-9 rounded-xl border border-white/10 bg-white/[0.04] px-4 text-xs font-medium text-neutral-300 hover:bg-white/[0.08]"
+                  className="h-10 rounded-xl border border-[#252a31] bg-[#141619] px-4 font-mono text-xs font-bold text-neutral-300 hover:border-white hover:text-white"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[#ccff00] text-black px-5 text-xs font-bold hover:bg-[#d9ff33] active:scale-95 disabled:opacity-50"
+                  className="flex h-10 items-center justify-center gap-2 rounded-xl border border-black bg-[#ccff00] text-black px-6 font-mono text-xs font-black uppercase shadow-cyber-sm hover:bg-[#d9ff33] active:translate-y-0.5 active:shadow-none transition disabled:opacity-50"
                 >
                   {isSaving ? (
                     <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin text-black" />
+                      <Loader2 className="h-4 w-4 animate-spin text-black" />
                       <span>Saving...</span>
                     </>
                   ) : (
-                    <span>Save Changes</span>
+                    <span>Save Changes ➔</span>
                   )}
                 </button>
               </div>

@@ -19,9 +19,9 @@ export async function getAdminSession(): Promise<AdminProfile | null> {
     if (!isSupabaseConfigured() && process.env.NODE_ENV !== "production") {
       return {
         id: "dev-admin-local",
-        email: "saxenaayush2809@gmail.com",
+        email: "admin@pathixo.com",
         role: "super_admin",
-        full_name: "Ayush Saxena (Local Dev)",
+        full_name: "System Administrator",
       };
     }
 

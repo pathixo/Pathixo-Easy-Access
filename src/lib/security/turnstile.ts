@@ -14,9 +14,11 @@ export async function verifyTurnstileToken(
   token: string | undefined,
   clientIp?: string
 ): Promise<{ success: boolean; error?: string }> {
-  // Allow official Cloudflare test site keys in development
+  const secretKey = process.env.TURNSTILE_SECRET_KEY;
+
+  // In development or when unconfigured, allow testing with dummy or test keys
   if (process.env.NODE_ENV !== "production") {
-    if (token === "1x00000000000000000000AA" || token === "test-dev-token") {
+    if (!secretKey || token === "1x00000000000000000000AA" || token === "test-dev-token" || !token) {
       return { success: true };
     }
   }
@@ -25,13 +27,7 @@ export async function verifyTurnstileToken(
     return { success: false, error: "Missing Turnstile verification token" };
   }
 
-  const secretKey = process.env.TURNSTILE_SECRET_KEY;
   if (!secretKey) {
-    // If not configured in development, pass through with warning
-    if (process.env.NODE_ENV !== "production") {
-      console.warn("WARN: TURNSTILE_SECRET_KEY not set. Skipping verification in development.");
-      return { success: true };
-    }
     return { success: false, error: "Turnstile secret key not configured" };
   }
 

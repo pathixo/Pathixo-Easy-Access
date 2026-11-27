@@ -70,11 +70,28 @@ export default async function AdminLuckyDrawPage() {
 
   return (
     <div className="space-y-8 max-w-6xl">
-      <div>
-        <h1 className="text-2xl font-extrabold text-white">Lucky Draw & Stall Redemption</h1>
-        <p className="text-xs text-neutral-400">
-          Verify visitor vouchers at the booth, mark prizes as redeemed, configure odds, and monitor stock inventory live.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#252a31] pb-5">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#ccff00]">
+              {"// BOOTH CONTROLLER HUD"}
+            </span>
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#ccff00] animate-pulse" />
+          </div>
+          <h1 className="mt-1 text-2xl font-black uppercase tracking-tight text-white sm:text-3xl">
+            Lucky Draw & <span className="text-[#ccff00]">Reward Engine</span>
+          </h1>
+          <p className="mt-1 font-mono text-xs text-neutral-400">
+            Verify visitor vouchers at the booth, mark prizes redeemed, tune probabilities & hard-caps live.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="rounded-xl border border-[#252a31] bg-[#101214] px-4 py-2 text-right">
+            <span className="block font-mono text-[10px] uppercase text-neutral-400">System Mode</span>
+            <span className="font-mono text-xs font-bold text-[#ccff00]">LIVE EXPO ACTIVE</span>
+          </div>
+        </div>
       </div>
 
       {/* Stall Code Lookup & Redemption Card */}
@@ -84,13 +101,23 @@ export default async function AdminLuckyDrawPage() {
       <PrizePoolManager initialRewards={rewards} />
 
       {/* Recent Lucky Draw Allocations */}
-      <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#121218]">
-        <div className="border-b border-white/[0.08] px-6 py-4">
-          <h2 className="text-sm font-bold text-white">Recent Lucky Draw Allocations & Fulfillment</h2>
+      <div className="overflow-hidden rounded-2xl border-2 border-[#252a31] bg-[#101214] shadow-cyber">
+        <div className="border-b border-[#252a31] bg-[#141619] px-6 py-4 flex items-center justify-between">
+          <div>
+            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#ccff00]">
+              {"// LIVE ALLOCATIONS LOG"}
+            </span>
+            <h2 className="text-sm font-black uppercase tracking-wide text-white">
+              Recent Lucky Draw Allocations & Fulfillment
+            </h2>
+          </div>
+          <span className="font-mono text-[11px] text-neutral-400">
+            Total Shown: <strong className="text-white">{recentSpins.length}</strong>
+          </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-white/10 bg-white/5 text-neutral-400 uppercase tracking-wider text-[10px]">
+            <thead className="border-b border-[#252a31] bg-[#0c0d0e] font-mono text-neutral-400 uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="px-4 py-3">Code</th>
                 <th className="px-4 py-3">Attendee</th>
@@ -100,7 +127,7 @@ export default async function AdminLuckyDrawPage() {
                 <th className="px-4 py-3">Time (IST)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-neutral-300">
+            <tbody className="divide-y divide-[#252a31] text-neutral-300">
               {recentSpins && recentSpins.length > 0 ? (
                 recentSpins.map((s) => {
                   const visitor = Array.isArray(s.visitors) ? s.visitors[0] : s.visitors;
@@ -109,19 +136,19 @@ export default async function AdminLuckyDrawPage() {
                   const emailSent = s.email_status === "sent";
 
                   return (
-                    <tr key={s.id} className="hover:bg-white/[0.02]">
+                    <tr key={s.id} className="hover:bg-white/[0.02] transition">
                       <td className="px-4 py-3 font-mono font-bold text-[#ccff00]">{s.reward_code}</td>
                       <td className="px-4 py-3">
-                        <p className="font-semibold text-white">{visitor?.full_name}</p>
-                        <p className="text-[11px] font-mono text-neutral-500">{visitor?.mobile}</p>
+                        <p className="font-bold text-white">{visitor?.full_name}</p>
+                        <p className="text-[11px] font-mono text-neutral-400">{visitor?.mobile}</p>
                       </td>
-                      <td className="px-4 py-3 text-neutral-200 font-medium">{reward?.name}</td>
+                      <td className="px-4 py-3 text-neutral-200 font-semibold">{reward?.name}</td>
                       <td className="px-4 py-3">
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          className={`rounded-full px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase ${
                             isRedeemed
-                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                              : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                              : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                           }`}
                         >
                           {isRedeemed ? "Redeemed at Booth" : "Unclaimed"}
@@ -129,18 +156,18 @@ export default async function AdminLuckyDrawPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          className={`rounded-full px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase ${
                             emailSent
-                              ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
+                              ? "bg-sky-500/10 text-sky-400 border border-sky-500/30"
                               : s.email_status === "failed"
-                              ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                              : "bg-neutral-500/10 text-neutral-400 border border-neutral-500/20"
+                              ? "bg-red-500/10 text-red-400 border border-red-500/30"
+                              : "bg-neutral-500/10 text-neutral-400 border border-neutral-500/30"
                           }`}
                         >
                           {s.email_status || "pending"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-neutral-400 text-[11px]">
+                      <td className="px-4 py-3 font-mono text-neutral-400 text-[11px]">
                         {formatKolkataTime(s.created_at)}
                       </td>
                     </tr>
@@ -148,8 +175,8 @@ export default async function AdminLuckyDrawPage() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-4 py-6 text-center text-neutral-500">
-                    No lucky draw spins recorded yet.
+                  <td colSpan={6} className="px-4 py-8 text-center font-mono text-neutral-500">
+                    {"// NO LUCKY DRAW ALLOCATIONS RECORDED YET"}
                   </td>
                 </tr>
               )}
