@@ -1,6 +1,6 @@
 # GEMINI AGENT CONTEXT & WORKSPACE INSTRUCTIONS
 
-Welcome to the **Vartikso Easy Access** (`Pathixo-Easy-Access`) project workspace. This repository powers the official on-ground mobile event platform for Vartikso (Pathixo Private Limited).
+Welcome to the **Pathixo Easy Access** (`Pathixo-Easy-Access`) project workspace. This repository powers the official on-ground mobile event platform for Pathixo Private Limited.
 
 ---
 
@@ -8,7 +8,7 @@ Welcome to the **Vartikso Easy Access** (`Pathixo-Easy-Access`) project workspac
 
 * **Primary Purpose:** Instant QR-landing mobile web application for expos, college summits, and startup events.
 * **Core Value Driver:** High-volume lead capture (students & visitors) gated by an interactive "Spin the Wheel" lucky draw engine.
-* **Secondary Utility:** Direct link directory (Linktree-style) with oversized touch buttons for Vartikso's main site, products, clearance deals, and memberships.
+* **Secondary Utility:** Direct link directory (Linktree-style) with oversized touch buttons for Pathixo's main site, products, clearance deals, and memberships.
 * **Admin Control:** Private, authenticated admin portal for monitoring live leads, managing reward inventory, viewing real-time analytics, and exporting CSVs.
 
 ---

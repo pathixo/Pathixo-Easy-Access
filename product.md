@@ -1,22 +1,22 @@
-# Product Omnibook: Vartikso Easy Access
+# Product Omnibook: Pathixo Easy Access
 
 > **Document Type:** Master Product Specification & AI Context Omnibook  
-> **Project Name:** Vartikso Easy Access (`Pathixo-Easy-Access`)  
+> **Project Name:** Pathixo Easy Access (`Pathixo-Easy-Access`)  
 > **Target Platform:** Mobile-First Web Application (QR-Accessed)  
-> **Primary Purpose:** Instant On-Ground Event Hub, Lead Capture & User Acquisition for Vartikso  
+> **Primary Purpose:** Instant On-Ground Event Hub, Lead Capture & User Acquisition for Pathixo  
 > **Last Updated:** November 2026  
 
 ---
 
 ## 1. Executive Summary & Vision
 
-**Vartikso Easy Access** is a rapid-deployment, mobile-dedicated web platform engineered specifically for on-ground expos, tech events, university summits, and startup showcases.
+**Pathixo Easy Access** is a rapid-deployment, mobile-dedicated web platform engineered specifically for on-ground expos, tech events, university summits, and startup showcases.
 
-When visitors and students approach the Vartikso booth or banners, they scan a physical QR code that immediately opens this lightweight, high-performance web experience in their native mobile browser. The platform functions as both an instantaneous navigation directory (providing direct links to Vartikso's core website, featured products, clearance deals, and memberships) and an interactive lead acquisition engine powered by a gamified "Spin the Wheel" lucky draw.
+When visitors and students approach the Pathixo booth or banners, they scan a physical QR code that immediately opens this lightweight, high-performance web experience in their native mobile browser. The platform functions as both an instantaneous navigation directory (providing direct links to Pathixo's core website, featured products, clearance deals, and memberships) and an interactive lead acquisition engine powered by a gamified "Spin the Wheel" lucky draw.
 
 ### Core Strategic Objectives
 1. **High-Velocity Lead Capture (Primary Goal):** Convert foot traffic, students, and expo attendees into verified, qualified leads (Name, Email, WhatsApp/Phone Number) before they leave the booth.
-2. **Instant Navigation Hub:** Eliminate the friction of searching for URLs by presenting thumb-friendly, oversized action buttons linking to the Vartikso ecosystem.
+2. **Instant Navigation Hub:** Eliminate the friction of searching for URLs by presenting thumb-friendly, oversized action buttons linking to the Pathixo ecosystem.
 3. **Incentivized Engagement (Gamification):** Hook visitors with an interactive "Spin the Wheel" lucky draw offering real-time discounts, offers, trial memberships, and clearance specials.
 4. **On-Ground Robustness:** Deliver sub-second loading speeds and rock-solid reliability even in crowded expo venues with congested cellular network connections.
 
@@ -26,8 +26,8 @@ When visitors and students approach the Vartikso booth or banners, they scan a p
 
 ### 2.1 User Personas
 * **College Students & Tech Enthusiasts:** Looking for quick freebies, student discounts, platform trials, and exciting tech products. Attention span is short (< 15 seconds).
-* **Expo Visitors & Early Adopters:** Looking for innovative tools, exclusive expo offers, and rapid overviews of what Vartikso builds.
-* **Partners & Potential Investors:** Looking for a quick one-tap path to review the main Vartikso website, company portfolio, and contact credentials.
+* **Expo Visitors & Early Adopters:** Looking for innovative tools, exclusive expo offers, and rapid overviews of what Pathixo builds.
+* **Partners & Potential Investors:** Looking for a quick one-tap path to review the main Pathixo website, company portfolio, and contact credentials.
 
 ### 2.2 Environmental Constraints (The "Expo Reality")
 * **Cellular Network Congestion:** Hundreds or thousands of devices connected to nearby cell towers simultaneously. Page weight must be ultra-light, avoiding bloated external dependencies.
@@ -45,11 +45,11 @@ When visitors and students approach the Vartikso booth or banners, they scan a p
    [Instant QR Scan] (Camera / Lens / In-App Browser)
              │
              ▼
-[Vartikso Easy Access Mobile Web App]
-   ├── 1. Brand Header (Vartikso Logo & Tagline)
+[Pathixo Easy Access Mobile Web App]
+   ├── 1. Brand Header (Pathixo Logo & Tagline)
    ├── 2. Primary Showcase Button: "🎡 Spin the Wheel & Win!"
    └── 3. Quick-Access Link Grid:
-          ├── Main Vartikso Website
+          ├── Main Pathixo Website
           ├── Product A Showcase
           ├── Product B Showcase
           ├── Special Expo Deals & Clearance
@@ -68,7 +68,7 @@ When visitors and students approach the Vartikso booth or banners, they scan a p
    ├── Outcome Calculation (Discount / Offer / Membership)
    └── Reward Screen:
           ├── Custom Voucher Code
-          ├── "Copy Code" & "Claim on Vartikso" CTA
+          ├── "Copy Code" & "Claim on Pathixo" CTA
           └── WhatsApp / SMS confirmation trigger
 ```
 
@@ -83,7 +83,7 @@ When visitors and students approach the Vartikso booth or banners, they scan a p
   * Tactile feedback: CSS active states (`transform: scale(0.98)`), micro-haptic animations.
   * Visual Hierarchy:
     1. **Hero CTA (Primary Glow / Shimmer):** "🎡 Spin to Win Discounts & Rewards!"
-    2. **Secondary Core Action:** "🌐 Visit Main Vartikso Website"
+    2. **Secondary Core Action:** "🌐 Visit Main Pathixo Website"
     3. **Tertiary Product Badges:** Direct product links with icons and micro-copy (e.g., "Product Alpha – Explore Now", "Exclusive Expo Offers").
 * **Zero Navigation Clutter:** No complex hamburger menus or deep nested pages. Everything is accessible in a single scrollable mobile view.
 
@@ -95,7 +95,7 @@ To play the lucky draw, users must first submit their information. This is the c
   2. **Email Address:** Standard RFC-compliant email validation.
   3. **Phone Number:** 10-digit mobile number with international country code selector (defaulting to local region, e.g., `+91`).
 * **Micro-Copy & Incentives:**
-  * Title: *"Win Up to 50% Off & Exclusive Vartikso Memberships!"*
+  * Title: *"Win Up to 50% Off & Exclusive Pathixo Memberships!"*
   * Subtitle: *"Enter your details below to unlock your lucky spin."*
 * **Consent & Compliance:**
   * Concise opt-in note: *"By continuing, you agree to receive your reward code and updates via WhatsApp/Email."*
@@ -105,10 +105,10 @@ To play the lucky draw, users must first submit their information. This is the c
 
 ### 4.3 Gamification Engine: "Spin the Wheel"
 * **Mechanics & Appearance:**
-  * Circular multi-segment wheel (typically 6 to 8 segments) styled with Vartikso brand colors.
+  * Circular multi-segment wheel (typically 6 to 8 segments) styled with Pathixo brand colors.
   * Segment Examples:
-    * `10% Off Any Vartikso Plan`
-    * `20% Off Vartikso Core`
+    * `10% Off Any Pathixo Plan`
+    * `20% Off Pathixo Core`
     * `Free 1-Month Premium Membership`
     * `Exclusive Expo Clearance Pass`
     * `Mega Mystery Reward`
@@ -120,7 +120,7 @@ To play the lucky draw, users must first submit their information. This is the c
   * Celebratory confetti animation (lightweight CSS/canvas).
   * Clear display of the winning voucher code (e.g., `EXPO-WIN-7281`).
   * One-tap **"Copy Voucher"** button.
-  * One-tap **"Claim on Vartikso.com"** deep link redirecting directly to the product checkout/registration with coupon auto-applied.
+  * One-tap **"Claim on Pathixo.com"** deep link redirecting directly to the product checkout/registration with coupon auto-applied.
 
 ### 4.4 Fraud Mitigation & Duplicate Prevention
 * **Single Spin Rule:** Users should not be able to spam the wheel to cycle through prizes.
@@ -141,7 +141,7 @@ To play the lucky draw, users must first submit their information. This is the c
   "campaign_source": "EXPO_NOV_2026",
   "captured_at": "2026-11-27T17:30:00Z",
   "prize_won": "Free 1-Month Premium Membership",
-  "voucher_code": "VARTIKSO-MEM-992",
+  "voucher_code": "PATHIXO-MEM-992",
   "device_info": {
     "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS...)",
     "screen_resolution": "390x844"
@@ -149,14 +149,14 @@ To play the lucky draw, users must first submit their information. This is the c
   "utm_parameters": {
     "source": "qr_banner_1",
     "medium": "offline_qr",
-    "campaign": "vartikso_easy_access"
+    "campaign": "pathixo_easy_access"
   },
   "sync_status": "synced"
 }
 ```
 
 ### 5.2 Storage & Transmission Pipeline
-* **Primary Target:** Cloud database (Supabase, Firebase Firestore, or Vartikso REST API endpoint).
+* **Primary Target:** Cloud database (Supabase, Firebase Firestore, or Pathixo REST API endpoint).
 * **Offline / Low-Signal Resilience (IndexedDB Queue):** If the user's connection drops right when submitting, the form data is saved into local `IndexedDB` and queued for retry as soon as network ping succeeds.
 * **Instant Notification Dispatch (Optional):**
   * WhatsApp Business API or SMS gateway (e.g., Twilio, Gupshup) sending the voucher code directly to the attendee's phone.
@@ -187,7 +187,7 @@ To guarantee zero breakdowns during live expo hours, the application must pass t
 * **QR Error Correction Level:** Set to **Level H (High)** (allows up to 30% damage/distortion without read failure).
 * **Contrast:** Dark QR code on clean white backing; avoid glossy laminates that create harsh glare under expo spotlights.
 * **URL Structure with UTM Tracking:**
-  `https://easy.vartikso.com/?utm_source=expo_stall&utm_medium=qr&utm_campaign=launch_2026`
+  `https://easy.pathixo.com/?utm_source=expo_stall&utm_medium=qr&utm_campaign=launch_2026`
 
 ---
 
@@ -209,14 +209,14 @@ pathixo-easy-access/
 ├── README.md                      # Quickstart and developer setup
 ├── public/
 │   ├── assets/
-│   │   ├── vartikso-logo.svg      # Crisp brand logo
+│   │   ├── pathixo-logo.svg       # Crisp brand logo
 │   │   ├── wheel-pointer.svg      # Indicator needle for spin wheel
 │   │   └── favicon.ico
 │   └── sounds/
 │       └── tick.mp3               # Audio micro-interaction (optional)
 ├── src/
 │   ├── components/
-│   │   ├── Header.tsx             # Vartikso brand header & banner
+│   │   ├── Header.tsx             # Pathixo brand header & banner
 │   │   ├── ActionLinks.tsx        # High-visibility quick access buttons
 │   │   ├── LeadModal.tsx          # Name/Email/Phone capture modal
 │   │   ├── SpinWheel.tsx          # Canvas/SVG gamified wheel

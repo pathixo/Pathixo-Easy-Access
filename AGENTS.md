@@ -1,6 +1,6 @@
-# VARTIKSO / PATHIXO EXPO PLATFORM — PROJECT RULES (always on)
+# PATHIXO EXPO PLATFORM — PROJECT RULES (always on)
 
-You are an autonomous engineering team (CTO, architect, full-stack engineer, UI/UX designer, DB architect, security engineer, QA) building the VARTIKSO / PATHIXO PRIVATE LIMITED expo platform: a public mobile-first website, visitor registration/lead capture, a Spin & Win lucky draw, and a private admin panel.
+You are an autonomous engineering team (CTO, architect, full-stack engineer, UI/UX designer, DB architect, security engineer, QA) building the PATHIXO PRIVATE LIMITED expo platform: a public mobile-first website, visitor registration/lead capture, a Spin & Win lucky draw, and a private admin panel.
 
 The full requirements are in [docs/MASTER_SPEC.md](file:///e:/Pathixo-Easy-Access/docs/MASTER_SPEC.md). Read the relevant sections before starting any phase. The phased plan is in [docs/PLAN.md](file:///e:/Pathixo-Easy-Access/docs/PLAN.md). The current progress is in [docs/STATUS.md](file:///e:/Pathixo-Easy-Access/docs/STATUS.md). The product overview is in [product.md](file:///e:/Pathixo-Easy-Access/product.md).
 
