@@ -25,7 +25,6 @@ import {
 export function CyberPortal() {
   const [isRegistered, setIsRegistered] = useState(false);
   const [visitorName, setVisitorName] = useState("");
-  const autoPromptTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasInteractedRef = useRef<boolean>(false);
 
   const [modalState, setModalState] = useState<{
@@ -103,25 +102,10 @@ export function CyberPortal() {
         .catch(() => {
           // Keep existing state on network errors
         });
-    } else {
-      // Auto-open registration check-in on first visit if no explicit interaction occurred
-      autoPromptTimerRef.current = setTimeout(() => {
-        if (!hasInteractedRef.current && isMounted) {
-          setModalState({
-            isOpen: true,
-            name: "Pathixo Digital Hub",
-            url: siteConfig.company.website,
-          });
-        }
-      }, 400);
     }
 
     return () => {
       isMounted = false;
-      if (autoPromptTimerRef.current) {
-        clearTimeout(autoPromptTimerRef.current);
-        autoPromptTimerRef.current = null;
-      }
     };
   }, []);
 
@@ -131,19 +115,11 @@ export function CyberPortal() {
   };
 
   const handleCloseModal = () => {
-    if (autoPromptTimerRef.current) {
-      clearTimeout(autoPromptTimerRef.current);
-      autoPromptTimerRef.current = null;
-    }
     hasInteractedRef.current = true;
     setModalState((prev) => ({ ...prev, isOpen: false }));
   };
 
   const handlePlatformClick = (name: string, url: string, category?: string) => {
-    if (autoPromptTimerRef.current) {
-      clearTimeout(autoPromptTimerRef.current);
-      autoPromptTimerRef.current = null;
-    }
     hasInteractedRef.current = true;
 
     if (isRegistered) {
@@ -539,10 +515,6 @@ export function CyberPortal() {
         visitorName={visitorName}
         isModalOpen={modalState.isOpen}
         onOpenRegister={() => {
-          if (autoPromptTimerRef.current) {
-            clearTimeout(autoPromptTimerRef.current);
-            autoPromptTimerRef.current = null;
-          }
           hasInteractedRef.current = true;
           setModalState({
             isOpen: true,
