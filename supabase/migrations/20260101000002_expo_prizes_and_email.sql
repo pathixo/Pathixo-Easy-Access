@@ -27,7 +27,7 @@ VALUES
 (
   'vakxo-1-year',
   '1-Year Vakxo Pro Subscription',
-  '1-Yr Vakxo Pro',
+  '1-Yr Vakxo',
   'Full 12-month access to Vakxo AI developer environment with unlimited voice actions and terminal automation.',
   'credit',
   2,
@@ -42,44 +42,44 @@ VALUES
 (
   'vakxo-1-month',
   '1-Month Vakxo Pro Access',
-  '1-Mo Vakxo Pro',
+  '1-Mo Vakxo',
   'Enjoy 30 days of Vakxo Pro AI workspace platform for your development team.',
   'credit',
   50,
   50,
   50,
   0,
-  15,
+  35,
   true,
   30,
   'Present this code at the Pathixo counter to receive your license key.'
 ),
 (
-  'booth-tech-swag',
-  'Pathixo Premium Tech Merchandise',
-  'Booth Swag',
-  'Exclusive Pathixo developer swag package (metal pen, tech notebook, or branded apparel).',
-  'merchandise',
-  3,
-  3,
-  3,
+  'discount-30-vakxo',
+  '30% Off Vakxo Annual Plan',
+  '30% Vakxo',
+  '30% discount voucher applied to the Vakxo AI developer platform annual subscription.',
+  'discount',
   0,
-  3,
+  0,
+  NULL,
+  0,
+  15,
   true,
-  3,
-  'Claim immediately at the Pathixo exhibition counter by showing this screen.'
+  30,
+  'Apply this voucher code at checkout on vakxo.com or show it to our booth team.'
 ),
 (
   'discount-20-dev',
   '20% Off Custom Engineering Milestone',
-  '20% Off Dev',
+  '20% Dev',
   '20% credit applied to the first sprint of custom AI or software engineering with Pathixo.',
   'discount',
   0,
   0,
   NULL,
   0,
-  25,
+  15,
   true,
   60,
   'Mention this voucher code during your project kickoff call with Pathixo leadership.'
@@ -87,62 +87,62 @@ VALUES
 (
   'discount-50-cloud',
   '50% Off Cloud & DevOps Setup',
-  '50% Off Cloud',
+  '50% Cloud',
   '50% discount on initial cloud infrastructure, CI/CD pipeline automation, or Kubernetes setup.',
   'discount',
   0,
   0,
   NULL,
   0,
-  20,
+  10,
   true,
   45,
   'Show this code to our solutions architect to apply the 50% cloud discount.'
 ),
 (
-  'ai-strategy-call',
-  'Free 1-on-1 AI Architecture Review',
-  'AI Strategy Call',
-  'Dedicated 60-minute technical roadmap and AI architecture session with Pathixo Principal Engineers.',
-  'consultation',
+  'krocpdf-6-month',
+  '6-Month krocPDF Pro Access',
+  '6M krocPDF',
+  '6 months of unlimited, high-speed in-browser PDF manipulation and document extraction with krocPDF Pro.',
+  'credit',
   0,
   0,
   NULL,
   0,
-  15,
+  8,
   true,
-  30,
-  'Book your deep-dive architecture session directly with our engineering founders.'
+  60,
+  'Enter this voucher code inside krocPDF to unlock 6 months of Pro tier access.'
 ),
 (
   'extended-trial-3mo',
   '3-Month krocPDF Team Pass',
-  '3-Mo krocPDF',
+  '3M krocPDF',
   'Unlimited fast in-browser document processing and structured extraction for your entire team.',
   'credit',
   0,
   0,
   NULL,
   0,
-  10,
+  15,
   true,
   60,
   'Use this pass code to activate team access on krocPDF.'
 ),
 (
-  'vip-expo-pass',
-  'VIP Exhibition Networking Voucher',
-  'VIP Expo Pass',
-  'Priority access to future Pathixo beta software releases and private networking webinars.',
-  'no_prize',
+  'vakxo-6-month',
+  '6-Month Vakxo Pro Subscription',
+  '6-Mo Vakxo',
+  '6-Month access to Vakxo AI developer environment with voice actions and terminal automation.',
+  'credit',
   0,
   0,
   NULL,
   0,
-  10,
+  0,
   true,
   90,
-  'Thank you for visiting Pathixo! Keep this code for VIP priority in upcoming launches.'
+  'Special promotional tier voucher code.'
 )
 ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,
@@ -268,6 +268,7 @@ BEGIN
         WHERE is_active = true 
           AND (max_cap IS NULL OR claimed_count < max_cap)
           AND (total_inventory = 0 OR remaining_inventory > 0)
+          AND probability_weight > 0
         ORDER BY id
       LOOP
         v_running_sum := v_running_sum + v_rec.probability_weight;

@@ -47,28 +47,28 @@ interface RewardSummary {
 // Visual style palette. Segments are built from the rewards that are actually
 // active in the database, so the wheel can never show a prize the server will
 // not award (or award a prize that is not on the wheel).
+// Visual style palette. Segments alternate cleanly between Cyber Lime and Dark Carbon
+// so the wheel looks symmetrical, balanced, and readable.
 const SEGMENT_STYLES = [
-  { color: "#ccff00", text: "#0a0b0c" },
-  { color: "#16191d", text: "#f4f4f5" },
-  { color: "#ccff00", text: "#0a0b0c" },
-  { color: "#101214", text: "#ccff00" },
-  { color: "#16191d", text: "#f4f4f5" },
-  { color: "#101214", text: "#ccff00" },
-  { color: "#16191d", text: "#f4f4f5" },
-  { color: "#101214", text: "#a1a1aa" },
-  { color: "#ccff00", text: "#0a0b0c" },
+  { color: "#ccff00", text: "#0a0b0c" }, // 0: Lime
+  { color: "#16191d", text: "#f4f4f5" }, // 1: Dark Carbon
+  { color: "#ccff00", text: "#0a0b0c" }, // 2: Lime
+  { color: "#16191d", text: "#f4f4f5" }, // 3: Dark Carbon
+  { color: "#ccff00", text: "#0a0b0c" }, // 4: Lime
+  { color: "#16191d", text: "#f4f4f5" }, // 5: Dark Carbon
+  { color: "#ccff00", text: "#0a0b0c" }, // 6: Lime
+  { color: "#16191d", text: "#f4f4f5" }, // 7: Dark Carbon
 ];
 
 const FALLBACK_REWARDS: RewardSummary[] = [
-  { slug: "vakxo-1-year", name: "1-Year Vakxo Pro Subscription", display_label: "1-Yr Vakxo Pro" },
-  { slug: "discount-20-dev", name: "20% Off Custom Engineering Milestone", display_label: "20% Off Dev" },
-  { slug: "booth-tech-swag", name: "Pathixo Premium Tech Merchandise", display_label: "Booth Swag" },
-  { slug: "vakxo-1-month", name: "1-Month Vakxo Pro Access", display_label: "1-Mo Vakxo Pro" },
-  { slug: "ai-strategy-call", name: "Free 1-on-1 AI Architecture Review", display_label: "AI Strategy Call" },
-  { slug: "discount-50-cloud", name: "50% Off Cloud & DevOps Setup", display_label: "50% Off Cloud" },
-  { slug: "extended-trial-3mo", name: "3-Month krocPDF Team Pass", display_label: "3-Mo krocPDF" },
-  { slug: "vip-expo-pass", name: "VIP Exhibition Networking Voucher", display_label: "VIP Expo Pass" },
-  { slug: "thank-you-pass", name: "Special Exhibition Thank-You Voucher", display_label: "Thank You Pass" },
+  { slug: "vakxo-1-year", name: "1-Year Vakxo Pro Subscription", display_label: "1-Yr Vakxo" },
+  { slug: "vakxo-1-month", name: "1-Month Vakxo Pro Access", display_label: "1-Mo Vakxo" },
+  { slug: "discount-30-vakxo", name: "30% Off Vakxo Annual Plan", display_label: "30% Vakxo" },
+  { slug: "discount-20-dev", name: "20% Off Custom Engineering Milestone", display_label: "20% Dev" },
+  { slug: "discount-50-cloud", name: "50% Off Cloud & DevOps Setup", display_label: "50% Cloud" },
+  { slug: "krocpdf-6-month", name: "6-Month krocPDF Pro Access", display_label: "6M krocPDF" },
+  { slug: "extended-trial-3mo", name: "3-Month krocPDF Team Pass", display_label: "3M krocPDF" },
+  { slug: "vakxo-6-month", name: "6-Month Vakxo Pro Subscription", display_label: "6-Mo Vakxo" },
 ];
 
 function toWheelSegments(rewards: RewardSummary[]): WheelSegment[] {
@@ -565,6 +565,8 @@ export function SpinWheel() {
                   const angle = 360 / segments.length;
                   const startAngle = i * angle;
                   const endAngle = (i + 1) * angle;
+                  const midAngle = startAngle + angle / 2;
+                  const isFlipped = midAngle > 90 && midAngle < 270;
 
                   const x1 = 50 + 50 * Math.cos((Math.PI * (startAngle - 90)) / 180);
                   const y1 = 50 + 50 * Math.sin((Math.PI * (startAngle - 90)) / 180);
@@ -578,13 +580,18 @@ export function SpinWheel() {
                       <path d={pathData} fill={seg.color} stroke="#0a0b0c" strokeWidth="0.7" />
                       <text
                         x="50"
-                        y="17"
+                        y="18"
                         fill={seg.text}
-                        fontSize="3.4"
+                        fontSize="3.1"
                         fontWeight="800"
                         fontFamily="monospace"
                         textAnchor="middle"
-                        transform={`rotate(${startAngle + angle / 2}, 50, 50)`}
+                        dominantBaseline="central"
+                        transform={
+                          isFlipped
+                            ? `rotate(${midAngle}, 50, 50) rotate(180, 50, 18)`
+                            : `rotate(${midAngle}, 50, 50)`
+                        }
                       >
                         {seg.label}
                       </text>

@@ -34,3 +34,15 @@
 ## ⚠️ Known Issues / Open Items
 - **#5 (High, security)**: Hardcoded super-admin fallback credentials and default `SESSION_SECRET` fallback are in place for local testing/dev. Ensure production environment variables (`ADMIN_LOGIN_USERNAME`, `ADMIN_LOGIN_PASSWORD`, `SESSION_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`) are set before deployment.
 - Real Supabase + real Cloudflare Turnstile + email delivery require production environment variables configured on Vercel per `docs/DEPLOYMENT.md`.
+
+---
+
+## 🎡 Spin & Win Wheel Configuration (Updated)
+- **Slice Orientation & Legibility**: Added dynamic 180° text flipping for sectors between 90° and 270° with `dominantBaseline="central"`. All slice labels now render upright and readable.
+- **Short Punchy Labels**: Shortened wheel labels (<= 10 chars: `1-Yr Vakxo`, `1-Mo Vakxo`, `30% Vakxo`, `20% Dev`, `50% Cloud`, `6M krocPDF`, `3M krocPDF`, `6-Mo Vakxo`) to eliminate text clipping.
+- **Balanced Cyber Palette**: Alternating Cyber Lime (`#ccff00`) and Dark Carbon (`#16191d`) across all 8 segments.
+- **Odds & Teaser Logic**:
+  - `1-Mo Vakxo Pro`: 35% probability.
+  - `6-Mo Vakxo Pro`: 0% probability weight (teaser slot; mathematically cannot be selected by `spin_wheel` function or dev store).
+  - Discount vouchers adjusted (`20% Dev`: 15%, `50% Cloud`: 10%, `30% Vakxo`: 15%).
+- **Verification**: `npm run typecheck`, `next lint`, and `npm run build` all pass with 0 errors.
