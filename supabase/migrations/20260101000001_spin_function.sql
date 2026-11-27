@@ -14,7 +14,7 @@ DECLARE
   i INT;
   val INT;
 BEGIN
-  r_bytes := gen_random_bytes(8);
+  r_bytes := extensions.gen_random_bytes(8);
   FOR i IN 0..7 LOOP
     IF i = 4 THEN
       result := result || '-';
@@ -24,7 +24,7 @@ BEGIN
   END LOOP;
   RETURN result;
 END;
-$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = public, extensions;
 
 -- Main spin_wheel function
 CREATE OR REPLACE FUNCTION public.spin_wheel(
@@ -125,7 +125,7 @@ BEGIN
       v_decremented := true;
     ELSE
       -- Cryptographically secure random integer between 1 and v_total_weight
-      v_random_bytes := gen_random_bytes(4);
+      v_random_bytes := extensions.gen_random_bytes(4);
       v_rand_val := (
         (get_byte(v_random_bytes, 0)::BIGINT << 24) |
         (get_byte(v_random_bytes, 1)::BIGINT << 16) |
@@ -251,7 +251,7 @@ BEGIN
     'redemption_instructions', v_chosen_reward.redemption_instructions
   );
 END;
-$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = public, extensions;
 
 -- Grant EXECUTE permission exclusively to service_role
 REVOKE ALL ON FUNCTION public.spin_wheel(UUID, TEXT) FROM PUBLIC, anon, authenticated;
